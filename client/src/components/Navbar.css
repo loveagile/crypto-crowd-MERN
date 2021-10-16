@@ -1,0 +1,8 @@
+.nav-links {
+  margin-left: auto;
+}
+
+.nav-inner-container {
+  height: 55px;
+  align-items: stretch !important;
+}

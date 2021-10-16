@@ -1,0 +1,29 @@
+.coin-icon {
+  height: 30px;
+  width: 30px;
+  margin-right: 10px;
+}
+
+.red {
+  color: red;
+}
+
+.green {
+  color: #11d811;
+}
+
+.bg-dark-red {
+  background: #780000;
+}
+
+.bg-dark-green {
+  background-color: #105e10;
+}
+
+.text-light-red {
+  color: #ff4f03;
+}
+
+.text-light-green {
+  color: #32cd32;
+}
