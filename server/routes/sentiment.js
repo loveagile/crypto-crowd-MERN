@@ -3,8 +3,68 @@ const axios = require("axios");
 const https = require("https");
 const logger = require("morgan");
 const router = express.Router();
+var Sentiment = require("sentiment");
+var sentiment = new Sentiment();
 
 router.use(logger("tiny"));
+
+// TODO: Implement sentiment analysis on Reddit and News post titles
+// At the moment I have installed the 'sentiment' Node.js but we could
+// change this to something else if there is a better package
+
+router.get("/test", (req, res) => {
+  let searchParam = req.params.search;
+
+  let limitParam = req.params.limit;
+
+  let redditResults = [];
+
+  // Used for finding average senmtiment score
+  let sentimentScores = [];
+
+  // Final aggregated results from both APIs
+  let results = {
+    averages: {
+      average_score: 0,
+      post_types: [],
+    },
+    posts: [],
+  };
+
+  const redditEndpoint = `http://www.reddit.com/search.json?limit=5`;
+
+  axios
+    .get(`${redditEndpoint}&q=${searchParam}`)
+    .then((response) => response.data)
+    .then((data) => {
+      for (let i = 0; i < data.data.children.length; i++) {
+        let dataObj = {};
+        dataObj["post_title"] = data.data.children[i].data.title;
+        dataObj["subreddit"] =
+          data.data.children[i].data.subreddit_name_prefixed;
+        dataObj["author"] = data.data.children[i].data.author_fullname;
+        dataObj["post_url"] = data.data.children[i].data.url;
+        redditResults.push(dataObj);
+      }
+      return redditResults;
+    })
+    .then((data) => {
+      data.forEach((post) => {
+        // Perform sentiment analysis
+        var sentResult = sentiment.analyze(post.post_title);
+        console.log(post);
+      });
+    })
+    .then((promises) => {
+      // Format data
+    })
+    .catch((err) => {
+      console.log(err.response);
+      res.json({ Error: true, Message: err.response });
+    });
+});
+
+// OLD Endpoints from assignment 1 below for reference (will delete later)
 
 router.get("/reddit/:search/:limit", (req, res) => {
   let searchParam = req.params.search;
