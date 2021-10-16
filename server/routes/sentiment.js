@@ -13,7 +13,7 @@ router.use(logger("tiny"));
 // change this to something else if there is a better package
 
 router.get("/test", (req, res) => {
-  let searchParam = req.params.search;
+  let searchParam = "cardano";
 
   let limitParam = req.params.limit;
 
@@ -49,14 +49,26 @@ router.get("/test", (req, res) => {
       return redditResults;
     })
     .then((data) => {
+      let sentimentResults = [];
       data.forEach((post) => {
         // Perform sentiment analysis
         var sentResult = sentiment.analyze(post.post_title);
-        console.log(post);
+        sentimentResults.push(sentResult);
       });
+
+      return sentimentResults;
     })
-    .then((promises) => {
-      // Format data
+    .then((data) => {
+      for (let i = 0; i < data.length; i++) {
+        let dataObj = {};
+        dataObj["post_title"] = redditResults[i].post_title;
+        dataObj["subreddit"] = redditResults[i].subreddit;
+        dataObj["author"] = redditResults[i].author;
+        dataObj["post_url"] = redditResults[i].post_url;
+        dataObj["sentiment_data"] = data[i];
+        results.posts.push(dataObj);
+      }
+      res.json(results);
     })
     .catch((err) => {
       console.log(err.response);
