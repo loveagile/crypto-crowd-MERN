@@ -1,6 +1,6 @@
 # cab432-assignment-2
 
-## How to run
+## Setup Guide
 
 1. Install dependencies in client and server folders
 2. Add .env file in server directory, set PORT=3001, set NEWS_API_KEY={api key from "Currents API" https://currentsapi.services/en}. No API key is required for the Reddit API.
