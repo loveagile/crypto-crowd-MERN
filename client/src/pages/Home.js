@@ -119,10 +119,10 @@ function Home() {
           <div className="container">
             <div className="row align-items-center py-5">
               <div className="col-md-6 text-md-left jumbotron-contents">
-                <h1 className="jumbotron-heading">
-                  Twitter Sentiment Analysis for Cryptocurrencies
+                <h1 className="jumbotron-heading fw-bold">
+                  Twitter Sentiment Analysis for <span className="text-primary">Cryptocurrencies</span>
                 </h1>
-                <p className="lead">
+                <p className="lead my-3 hero-text">
                   See what people are tweeting about cryptocurrencies online to
                   optimise your investing.
                 </p>

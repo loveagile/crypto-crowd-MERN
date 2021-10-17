@@ -9,6 +9,10 @@
   width: 200px;
 }
 
+.hero-text {
+  color: #595959;
+}
+
 .data-summary {
   min-height: 200px;
 }
