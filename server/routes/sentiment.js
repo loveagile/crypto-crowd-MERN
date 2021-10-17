@@ -68,6 +68,7 @@ router.get("/reddit/:search/:limit", (req, res) => {
         dataObj["sentiment_data"] = data[i];
         results.posts.push(dataObj);
       }
+      console.log(results.posts.length);
       res.json(results);
     })
     .catch((err) => {
