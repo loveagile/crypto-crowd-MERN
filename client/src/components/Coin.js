@@ -47,7 +47,7 @@ const Coin = ({
           className="btn btn-primary"
           onClick={(row) =>
             history.push({
-              pathname: `/reddit`,
+              pathname: `/twitter`,
               search: `?coin=${name}`,
               state: { data: [name, symbol] },
             })

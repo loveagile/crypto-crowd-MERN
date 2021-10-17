@@ -17,6 +17,8 @@
     "jade": "~1.11.0",
     "morgan": "~1.9.1",
     "nodemon": "^2.0.12",
-    "sentiment": "^5.0.2"
+    "sentiment": "^5.0.2",
+    "twit": "^2.2.11",
+    "twitter": "^1.7.1"
   }
 }

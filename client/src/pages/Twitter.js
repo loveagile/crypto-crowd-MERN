@@ -7,7 +7,7 @@ import TagCloud from "react-tag-cloud";
 import randomColor from "randomcolor";
 import PieChart from "../components/PieChart";
 
-function Reddit() {
+function Twitter() {
   const history = useHistory();
   const location = useLocation();
   const params = new URLSearchParams(useLocation().search);
@@ -24,58 +24,49 @@ function Reddit() {
 
   useEffect(() => {
     if (loading === false) {
-      setSentDistribution(getPercentages(data.data.averages.post_types));
-
-      // Get Keywords for all posts
-      let words = [];
-      for (let i = 0; i < data.data.posts.length; i++) {
-        for (
-          let j = 0;
-          j < data.data.posts[i].sentiment_data.keywords.length;
-          j++
-        ) {
-          words.push(data.data.posts[i].sentiment_data.keywords[j].word);
+      if (data.data) {
+        // Get Keywords for all posts
+        let words = [];
+        for (let i = 0; i < data.data.posts.length; i++) {
+          for (
+            let j = 0;
+            j < data.data.posts[i].sentiment_data.words.length;
+            j++
+          ) {
+            words.push(data.data.posts[i].sentiment_data.words[j]);
+          }
         }
+        setKeywords(words);
       }
-      setKeywords(words);
     }
   }, [loading]);
 
+  useEffect(() => {
+    console.log(keywords);
+  }, [keywords]);
+
   // Get percentages of each sentiment type for pie chart
-  function getPercentages(arr) {
-    const totalItems = arr.length;
-    const uniqueItems = [...new Set(arr)];
-    let results = {
-      positive: 0,
-      negative: 0,
-      neutral: 0,
-    };
-    uniqueItems.forEach((currType) => {
-      const numItems = arr.filter((type) => type === currType);
+  // function getPercentages(arr) {
+  //   const totalItems = arr.length;
+  //   const uniqueItems = [...new Set(arr)];
+  //   let results = {
+  //     positive: 0,
+  //     negative: 0,
+  //     neutral: 0,
+  //   };
+  //   uniqueItems.forEach((currType) => {
+  //     const numItems = arr.filter((type) => type === currType);
 
-      if (numItems[0] === "positive") {
-        results.positive = (numItems.length * 100) / totalItems;
-      } else if (numItems[0] === "negative") {
-        results.negative = (numItems.length * 100) / totalItems;
-      } else if (numItems[0] === "neutral") {
-        results.neutral = (numItems.length * 100) / totalItems;
-      }
-    });
-    return results;
-  }
-
-  let dropdownOptions = [
-    { label: "Reddit", value: "Reddit" },
-    { label: "News", value: "News" },
-  ];
-
-  let limitDropdownOptions = [
-    { label: "5", value: "5" },
-    { label: "10", value: "10" },
-    { label: "25", value: "25" },
-    { label: "50", value: "50" },
-    { label: "100", value: "100" },
-  ];
+  //     if (numItems[0] === "positive") {
+  //       results.positive = (numItems.length * 100) / totalItems;
+  //     } else if (numItems[0] === "negative") {
+  //       results.negative = (numItems.length * 100) / totalItems;
+  //     } else if (numItems[0] === "neutral") {
+  //       results.neutral = (numItems.length * 100) / totalItems;
+  //     }
+  //   });
+  //   return results;
+  // }
 
   return (
     <div className="container my-5">
@@ -88,20 +79,6 @@ function Reddit() {
                 ({location.state.data[1]})
               </span>
             </h1>
-            <div className="select-container my-3 d-flex">
-              <Select
-                options={dropdownOptions}
-                defaultValue={dropdownOptions[0]}
-                className="sentiment-dropdown"
-                onChange={(e) => {
-                  history.push({
-                    pathname: `/news`,
-                    search: `?coin=${coinName}`,
-                    state: { data: [coinName, location.state.data[1]] },
-                  });
-                }}
-              />
-            </div>
           </div>
 
           <div className="row mt-3 mb-5 d-flex justify-content-between">
@@ -124,11 +101,7 @@ function Reddit() {
               </p>
 
               <div className="h-75 d-flex justify-content-center align-items-center">
-                {loading === true ? (
-                  <ScaleLoader color="#0d6efd" />
-                ) : (
-                  <h5>{data.data.averages.average_score}</h5>
-                )}
+                <p>Average Score Goes Here</p>
               </div>
             </div>
             <div className="col-3 border py-3 text-center rounded data-summary">
@@ -170,14 +143,14 @@ function Reddit() {
               {loading ? (
                 <div className="d-flex flex-column justify-content-center align-items-center">
                   <ScaleLoader color="#0d6efd" />
-                  <h5 className="my-3">Loading Reddit data...</h5>
+                  <h5 className="my-3">Loading Twitter data...</h5>
                 </div>
               ) : (
                 <div className="reddit-posts">
                   <div className="d-flex justify-content-between">
                     <h3>
-                      <i className="fab fa-reddit text-danger"></i> Trending
-                      Reddit posts about {coinName}
+                      <i className="fab fa-twitter text-primary"></i>
+                      <span class="mx-2">Twitter posts about {coinName}</span>
                     </h3>
                   </div>
 
@@ -205,38 +178,34 @@ function Reddit() {
                         </h5>
 
                         {(() => {
-                          if (post.sentiment_data.type === "positive") {
+                          if (post.sentiment_data.score > 0) {
                             return (
                               <p className="text-capitalize my-2">
                                 <b>Type:</b>{" "}
                                 <span className="text-success mx-1">
-                                  {post.sentiment_data.type}
+                                  Positive
                                 </span>
-                                👍
+                                😊
                               </p>
                             );
-                          } else if (post.sentiment_data.type === "negative") {
+                          } else if (post.sentiment_data.score < 0) {
                             return (
                               <p className="text-capitalize my-2">
                                 <b>Type:</b>{" "}
                                 <span className="text-danger mx-1">
-                                  {post.sentiment_data.type}
+                                  Negative
                                 </span>
-                                👎
-                              </p>
-                            );
-                          } else if (post.sentiment_data.type === "neutral") {
-                            return (
-                              <p className="text-capitalize my-2">
-                                <b>Type:</b>{" "}
-                                <span className="text-muted mx-1">
-                                  {post.sentiment_data.type}
-                                </span>
-                                😐
+                                ☹️
                               </p>
                             );
                           } else {
-                            return null;
+                            return (
+                              <p className="text-capitalize my-2">
+                                <b>Type:</b>{" "}
+                                <span className="text-muted mx-1">Neutral</span>
+                                😐
+                              </p>
+                            );
                           }
                         })()}
 
@@ -244,19 +213,22 @@ function Reddit() {
                           <b>Score:</b> {post.sentiment_data.score}
                         </p>
                         <p className="my-2">
-                          <b>Ratio:</b> {post.sentiment_data.ratio}
+                          <b>Comparative Score:</b>{" "}
+                          {post.sentiment_data.comparative}
                         </p>
-                        <p className="my-2">
-                          <b>Keywords: </b>
-                          {post.sentiment_data.keywords.map((obj, index) => (
-                            <span
-                              className="mx-1 py-2 px-3 rounded bg-light"
-                              key={index}
-                            >
-                              {obj.word}
-                            </span>
-                          ))}
-                        </p>
+                        {post.sentiment_data.words.length > 0 ? (
+                          <p className="my-2">
+                            <b>Keywords: </b>
+                            {post.sentiment_data.words.map((word, index) => (
+                              <span
+                                className="mx-1 py-2 px-3 rounded bg-light"
+                                key={index}
+                              >
+                                {word}
+                              </span>
+                            ))}
+                          </p>
+                        ) : null}
                       </div>
                     );
                   })}
@@ -273,4 +245,4 @@ function Reddit() {
   );
 }
 
-export default Reddit;
+export default Twitter;

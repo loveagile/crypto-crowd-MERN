@@ -17,16 +17,6 @@ export default function GetSentimentData(route, query, limit) {
           setError(e);
           setLoading(false);
         });
-    } else if (route === "news") {
-      getNewsData(query, limit)
-        .then((data) => {
-          setData(data);
-          setLoading(false);
-        })
-        .catch((e) => {
-          setError(e);
-          setLoading(false);
-        });
     }
   }, [route]);
 
@@ -38,13 +28,7 @@ export default function GetSentimentData(route, query, limit) {
 }
 
 function getRedditData(query, limit) {
-  return axios(`/sentiment/reddit/${query}/${limit}`).then(
-    (response) => response
-  );
-}
-
-function getNewsData(query, limit) {
-  return axios(`/sentiment/news/${query}/${limit}`).then(
+  return axios(`http://127.0.0.1:3001/sentiment/reddit/${query}/${limit}`).then(
     (response) => response
   );
 }
