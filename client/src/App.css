@@ -21,6 +21,19 @@
   margin-bottom: 0 !important;
 }
 
+.twitter-image {
+  border-radius: 50%;
+}
+
+.twitter-img-container {
+  width: 10%;
+}
+
+.twitter-info-container {
+  width: 90%;
+  padding-left: 1rem;
+}
+
 /* Override Bootstrap default for reddit/news dropdown */
 .form-select {
   width: 125px !important;

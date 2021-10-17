@@ -41,33 +41,6 @@ function Twitter() {
     }
   }, [loading]);
 
-  useEffect(() => {
-    console.log(keywords);
-  }, [keywords]);
-
-  // Get percentages of each sentiment type for pie chart
-  // function getPercentages(arr) {
-  //   const totalItems = arr.length;
-  //   const uniqueItems = [...new Set(arr)];
-  //   let results = {
-  //     positive: 0,
-  //     negative: 0,
-  //     neutral: 0,
-  //   };
-  //   uniqueItems.forEach((currType) => {
-  //     const numItems = arr.filter((type) => type === currType);
-
-  //     if (numItems[0] === "positive") {
-  //       results.positive = (numItems.length * 100) / totalItems;
-  //     } else if (numItems[0] === "negative") {
-  //       results.negative = (numItems.length * 100) / totalItems;
-  //     } else if (numItems[0] === "neutral") {
-  //       results.neutral = (numItems.length * 100) / totalItems;
-  //     }
-  //   });
-  //   return results;
-  // }
-
   return (
     <div className="container my-5">
       {error === null ? (
@@ -150,7 +123,9 @@ function Twitter() {
                   <div className="d-flex justify-content-between">
                     <h3>
                       <i className="fab fa-twitter text-primary"></i>
-                      <span class="mx-2">Twitter posts about {coinName}</span>
+                      <span class="mx-2">
+                        Top Twitter posts about {coinName}
+                      </span>
                     </h3>
                   </div>
 
@@ -164,71 +139,85 @@ function Twitter() {
 
                   {data.data?.posts.map((post) => {
                     return (
-                      <div className="border rounded my-4 p-3" key={post.title}>
-                        <p className="fw-bold">{post.subreddit}</p>
-                        <h5 className="my-2">
-                          <a
-                            className="text-decoration-none"
-                            href={post.post_url}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            {post.post_title}
-                          </a>
-                        </h5>
+                      <div
+                        className="border rounded my-4 p-3 d-flex"
+                        key={post.title}
+                      >
+                        <div className="d-flex align-items-center flex-column justify-content-center twitter-img-container">
+                          <img
+                            src="https://via.placeholder.com/100"
+                            alt="twitter profile"
+                            className="twitter-image"
+                          />
+                          <p className="fw-bold text-center mt-2">Username</p>
+                        </div>
+                        <div class="twitter-info-container">
+                          <h5 className="my-2">
+                            <a
+                              className="text-decoration-none"
+                              href={post.post_url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {post.post_title}
+                            </a>
+                          </h5>
 
-                        {(() => {
-                          if (post.sentiment_data.score > 0) {
-                            return (
-                              <p className="text-capitalize my-2">
-                                <b>Type:</b>{" "}
-                                <span className="text-success mx-1">
-                                  Positive
-                                </span>
-                                😊
-                              </p>
-                            );
-                          } else if (post.sentiment_data.score < 0) {
-                            return (
-                              <p className="text-capitalize my-2">
-                                <b>Type:</b>{" "}
-                                <span className="text-danger mx-1">
-                                  Negative
-                                </span>
-                                ☹️
-                              </p>
-                            );
-                          } else {
-                            return (
-                              <p className="text-capitalize my-2">
-                                <b>Type:</b>{" "}
-                                <span className="text-muted mx-1">Neutral</span>
-                                😐
-                              </p>
-                            );
-                          }
-                        })()}
+                          {(() => {
+                            if (post.sentiment_data.score > 0) {
+                              return (
+                                <p className="text-capitalize my-2">
+                                  <b>Type:</b>{" "}
+                                  <span className="text-success mx-1">
+                                    Positive
+                                  </span>
+                                  😊
+                                </p>
+                              );
+                            } else if (post.sentiment_data.score < 0) {
+                              return (
+                                <p className="text-capitalize my-2">
+                                  <b>Type:</b>{" "}
+                                  <span className="text-danger mx-1">
+                                    Negative
+                                  </span>
+                                  ☹️
+                                </p>
+                              );
+                            } else {
+                              return (
+                                <p className="text-capitalize my-2">
+                                  <b>Type:</b>{" "}
+                                  <span className="text-muted mx-1">
+                                    Neutral
+                                  </span>
+                                  😐
+                                </p>
+                              );
+                            }
+                          })()}
 
-                        <p className="text-capitalize my-2">
-                          <b>Score:</b> {post.sentiment_data.score}
-                        </p>
-                        <p className="my-2">
-                          <b>Comparative Score:</b>{" "}
-                          {post.sentiment_data.comparative}
-                        </p>
-                        {post.sentiment_data.words.length > 0 ? (
-                          <p className="my-2">
-                            <b>Keywords: </b>
-                            {post.sentiment_data.words.map((word, index) => (
-                              <span
-                                className="mx-1 py-2 px-3 rounded bg-light"
-                                key={index}
-                              >
-                                {word}
-                              </span>
-                            ))}
+                          <p className="text-capitalize my-2">
+                            <b>Score:</b> {post.sentiment_data.score}
                           </p>
-                        ) : null}
+                          <p className="my-2">
+                            <b>Comparative Score:</b>{" "}
+                            {post.sentiment_data.comparative}
+                          </p>
+                          {post.sentiment_data.words.length > 0 ? (
+                            <p className="my-2">
+                              <b>Keywords: </b>
+                              {post.sentiment_data.words.map((word, index) => (
+                                <span
+                                  className="mx-1 py-2 px-3 rounded bg-light"
+                                  key={index}
+                                >
+                                  {word}
+                                </span>
+                              ))}
+                            </p>
+                          ) : null}
+                        </div>
                       </div>
                     );
                   })}
