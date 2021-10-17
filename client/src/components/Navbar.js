@@ -12,8 +12,10 @@ function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white custom-box-shadow p-0">
       <div className="container nav-inner-container">
-        <Link to="/" className="d-flex align-items-center">
-          <img src={logo} alt="logo" className="logo" />
+        <Link to="/" className="d-flex align-items-center text-decoration-none">
+          <h3 class="fw-bold m-0">
+            <span class="text-black">Cryto</span>Crowd
+          </h3>
         </Link>
 
         <button
