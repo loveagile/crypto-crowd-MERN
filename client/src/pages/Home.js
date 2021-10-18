@@ -129,6 +129,7 @@ function Home() {
                 <Button className="btn-rounded my-2" color="primary">
                   <Link to="about" className="text-white text-decoration-none">
                     Learn More
+                    <i class="fas fa-arrow-right"></i>
                   </Link>
                 </Button>
               </div>
