@@ -14,12 +14,12 @@ var client = new Twitter({
 });
 
 module.exports = {
-    getTweets: function(searchParam) {
+    getTweets: async function(searchParam) {
         return new Promise((resolve, reject) => {
           // q - Search query
           // count - Number of tweets to return in one request (100 is max)
           // result_type - Mixed, Recent, or Popular
-          client.get('search/tweets', {q: searchParam, count: 5, result_type: 'mixed', include_entities: true}, function(error, tweets, response) {
+          client.get('search/tweets', {q: searchParam, count: 100, result_type: 'mixed', include_entities: true}, function(error, tweets, response) {
             let twitterResults = [];
             if (!error) {
               for (let i = 0; i < tweets.statuses.length; i++) {

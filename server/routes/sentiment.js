@@ -18,6 +18,8 @@ router.use(logger("tiny"));
 router.get("/twitter/:search", (req, res) => {
   let searchParam = req.params.search;
 
+  let twitterResults = [];
+
   // Used for finding average senmtiment score
   let sentimentScores = [];
 
@@ -25,17 +27,36 @@ router.get("/twitter/:search", (req, res) => {
   let results = {
     averages: {
       average_score: 0,
-      post_types: [],
     },
     posts: [],
   };
 
   // Get tweets from helper function
+  
   TwitterHelper.getTweets(searchParam).then((data) => {
-    res.json(data)
-  })
-
-  // const redditEndpoint = `http://www.reddit.com/search.json?limit=${limitParam}`;
+    twitterResults = data;
+    let sentimentResults = [];
+      data.forEach((post) => {
+        // Perform sentiment analysis
+        var sentResult = sentiment.analyze(post.tweet_text);
+        sentimentResults.push(sentResult);
+      });
+      return sentimentResults;
+  }).then((data) => {
+      for (let i = 0; i < data.length; i++) {
+        let dataObj = {};
+        dataObj["user"] = twitterResults[i].user;
+        dataObj["tweet_text"] = twitterResults[i].tweet_text;
+        dataObj["user_profile_img"] = twitterResults[i].user_profile_img;
+        dataObj["created_at"] = twitterResults[i].created_at;
+        dataObj["sentiment_data"] = data[i];
+        results.posts.push(dataObj);
+      }
+      res.json(results);
+  }).catch((err) => {
+    console.log(err.response);
+    res.json({ Error: true, Message: err.response });
+  });
 
   // axios
   //   .get(`${redditEndpoint}&q=${searchParam}`)

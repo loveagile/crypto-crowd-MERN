@@ -7,7 +7,7 @@ export default function GetSentimentData(route, query, limit) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (route === "reddit") {
+    if (route === "twitter") {
       getRedditData(query, limit)
         .then((data) => {
           setData(data);
@@ -28,7 +28,7 @@ export default function GetSentimentData(route, query, limit) {
 }
 
 function getRedditData(query, limit) {
-  return axios(`http://127.0.0.1:3001/sentiment/reddit/${query}/${limit}`).then(
+  return axios(`http://127.0.0.1:3001/sentiment/twitter/${query}`).then(
     (response) => response
   );
 }
