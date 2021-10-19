@@ -19,9 +19,8 @@ module.exports = {
           // q - Search query
           // count - Number of tweets to return in one request (100 is max)
           // result_type - Mixed, Recent, or Popular
-          client.get('search/tweets', {q: searchParam, count: 100, result_type: 'mixed', include_entities: true}, function(error, tweets, response) {
+          client.get('search/tweets', {q: searchParam, count: 5, result_type: 'mixed', include_entities: true}, function(error, tweets, response) {
             let twitterResults = [];
-            
             if (!error) {
               for (let i = 0; i < tweets.statuses.length; i++) {
                   let dataObj = {};
@@ -31,7 +30,7 @@ module.exports = {
                   dataObj["created_at"] = tweets.statuses[i].created_at;
                   twitterResults.push(dataObj);
               }
-              return resolve(tweets)
+              return resolve(twitterResults)
             } else {
               return reject(error);
             }
