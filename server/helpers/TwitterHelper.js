@@ -14,7 +14,7 @@ var client = new Twitter({
 });
 
 module.exports = {
-    getTweets: async function(searchParam) {
+    getTweets: function(searchParam) {
         return new Promise((resolve, reject) => {
           // q - Search query
           // count - Number of tweets to return in one request (100 is max)
@@ -28,6 +28,8 @@ module.exports = {
                   dataObj["user"] = tweets.statuses[i].user.screen_name;
                   dataObj["user_profile_img"] = tweets.statuses[i].user.profile_image_url_https;
                   dataObj["created_at"] = tweets.statuses[i].created_at;
+                  dataObj["tweet_url"] = tweets.statuses[i].entities.urls[0]?.url;
+                  // console.log(tweets.statuses[i].entities.urls[0]?.url)
                   twitterResults.push(dataObj);
               }
               return resolve(twitterResults)

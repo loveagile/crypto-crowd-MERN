@@ -56,18 +56,6 @@
   width: 125px !important;
 }
 
-.news-image {
-  height: 266px;
-}
-
-.sentiment-dropdown {
-  width: 120px;
-}
-
-.limit-dropdown {
-  width: 80px;
-}
-
 .particles-container {
   position: relative;
 }
@@ -85,4 +73,9 @@
 
 p {
   margin-bottom: 0 !important;
+}
+
+.link-disabled {
+  pointer-events: none;
+  cursor: default;
 }

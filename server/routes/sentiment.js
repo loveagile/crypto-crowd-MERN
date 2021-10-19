@@ -6,7 +6,6 @@ const router = express.Router();
 var Sentiment = require("sentiment");
 var sentiment = new Sentiment();
 
-const getTweets = require("../helpers/TwitterHelper");
 const TwitterHelper = require("../helpers/TwitterHelper");
 
 router.use(logger("tiny"));
@@ -35,18 +34,22 @@ router.get("/twitter/:search", (req, res) => {
   
   TwitterHelper.getTweets(searchParam).then((data) => {
     twitterResults = data;
+    // Perform sentiment analysis
     let sentimentResults = [];
       data.forEach((post) => {
         // Perform sentiment analysis
         var sentResult = sentiment.analyze(post.tweet_text);
         sentimentResults.push(sentResult);
       });
+
       return sentimentResults;
   }).then((data) => {
+      // Format twitter data and sentiment data together
       for (let i = 0; i < data.length; i++) {
         let dataObj = {};
         dataObj["user"] = twitterResults[i].user;
         dataObj["tweet_text"] = twitterResults[i].tweet_text;
+        dataObj["tweet_url"] = twitterResults[i].tweet_url;
         dataObj["user_profile_img"] = twitterResults[i].user_profile_img;
         dataObj["created_at"] = twitterResults[i].created_at;
         dataObj["sentiment_data"] = data[i];

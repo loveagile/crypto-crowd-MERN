@@ -154,8 +154,8 @@ function Twitter() {
                         <div class="twitter-info-container">
                           <h5 className="my-2">
                             <a
-                              className="text-decoration-none"
-                              href="#"
+                              className={`text-decoration-none ${!post.tweet_url ? "text-black link-disabled" : ""}`}
+                              href={post.tweet_url ? post.tweet_url : "#"}
                               target="_blank"
                               rel="noreferrer"
                             >
