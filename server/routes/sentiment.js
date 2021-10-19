@@ -15,10 +15,8 @@ router.use(logger("tiny"));
 // At the moment I have installed the 'sentiment' Node.js but we could
 // change this to something else if there is a better package
 
-router.get("/twitter/:search/:limit", (req, res) => {
+router.get("/twitter/:search", (req, res) => {
   let searchParam = req.params.search;
-
-  let limitParam = req.params.limit;
 
   // Used for finding average senmtiment score
   let sentimentScores = [];
@@ -33,8 +31,8 @@ router.get("/twitter/:search/:limit", (req, res) => {
   };
 
   // Get tweets from helper function
-  TwitterHelper.getTweets(searchParam, limitParam).then((data) => {
-    console.log(data)
+  TwitterHelper.getTweets(searchParam).then((data) => {
+    res.json(data)
   })
 
   // const redditEndpoint = `http://www.reddit.com/search.json?limit=${limitParam}`;

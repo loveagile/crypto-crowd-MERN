@@ -14,9 +14,12 @@ var client = new Twitter({
 });
 
 module.exports = {
-    getTweets: function(searchParam, limitParam) {
+    getTweets: function(searchParam) {
         return new Promise((resolve, reject) => {
-          client.get('search/tweets', {q: searchParam, count: limitParam, result_type: 'popular', include_entities: true}, function(error, tweets, response) {
+          // q - Search query
+          // count - Number of tweets to return in one request (100 is max)
+          // result_type - Mixed, Recent, or Popular
+          client.get('search/tweets', {q: searchParam, count: 100, result_type: 'mixed', include_entities: true}, function(error, tweets, response) {
             let twitterResults = [];
             
             if (!error) {
@@ -28,7 +31,7 @@ module.exports = {
                   dataObj["created_at"] = tweets.statuses[i].created_at;
                   twitterResults.push(dataObj);
               }
-              return resolve(twitterResults)
+              return resolve(tweets)
             } else {
               return reject(error);
             }
