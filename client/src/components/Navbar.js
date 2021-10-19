@@ -14,7 +14,7 @@ function Navbar() {
       <div className="container nav-inner-container">
         <Link to="/" className="d-flex align-items-center text-decoration-none">
           <h3 class="fw-bold m-0">
-            <span class="text-black">Cryto</span>Crowd
+            <span class="text-black">Crypto</span>Crowd
           </h3>
         </Link>
 

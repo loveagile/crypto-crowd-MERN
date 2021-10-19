@@ -6,18 +6,19 @@ const router = express.Router();
 var Sentiment = require("sentiment");
 var sentiment = new Sentiment();
 
+const getTweets = require("../helpers/TwitterHelper");
+const TwitterHelper = require("../helpers/TwitterHelper");
+
 router.use(logger("tiny"));
 
 // TODO: Implement sentiment analysis on Reddit and News post titles
 // At the moment I have installed the 'sentiment' Node.js but we could
 // change this to something else if there is a better package
 
-router.get("/reddit/:search/:limit", (req, res) => {
+router.get("/twitter/:search/:limit", (req, res) => {
   let searchParam = req.params.search;
 
   let limitParam = req.params.limit;
-
-  let redditResults = [];
 
   // Used for finding average senmtiment score
   let sentimentScores = [];
@@ -31,50 +32,55 @@ router.get("/reddit/:search/:limit", (req, res) => {
     posts: [],
   };
 
-  const redditEndpoint = `http://www.reddit.com/search.json?limit=${limitParam}`;
+  // Get tweets from helper function
+  TwitterHelper.getTweets(searchParam, limitParam).then((data) => {
+    console.log(data)
+  })
 
-  axios
-    .get(`${redditEndpoint}&q=${searchParam}`)
-    .then((response) => response.data)
-    .then((data) => {
-      for (let i = 0; i < data.data.children.length; i++) {
-        let dataObj = {};
-        dataObj["post_title"] = data.data.children[i].data.title;
-        dataObj["subreddit"] =
-          data.data.children[i].data.subreddit_name_prefixed;
-        dataObj["author"] = data.data.children[i].data.author_fullname;
-        dataObj["post_url"] = data.data.children[i].data.url;
-        redditResults.push(dataObj);
-      }
-      return redditResults;
-    })
-    .then((data) => {
-      let sentimentResults = [];
-      data.forEach((post) => {
-        // Perform sentiment analysis
-        var sentResult = sentiment.analyze(post.post_title);
-        sentimentResults.push(sentResult);
-      });
+  // const redditEndpoint = `http://www.reddit.com/search.json?limit=${limitParam}`;
 
-      return sentimentResults;
-    })
-    .then((data) => {
-      for (let i = 0; i < data.length; i++) {
-        let dataObj = {};
-        dataObj["post_title"] = redditResults[i].post_title;
-        dataObj["subreddit"] = redditResults[i].subreddit;
-        dataObj["author"] = redditResults[i].author;
-        dataObj["post_url"] = redditResults[i].post_url;
-        dataObj["sentiment_data"] = data[i];
-        results.posts.push(dataObj);
-      }
-      console.log(results.posts.length);
-      res.json(results);
-    })
-    .catch((err) => {
-      console.log(err.response);
-      res.json({ Error: true, Message: err.response });
-    });
+  // axios
+  //   .get(`${redditEndpoint}&q=${searchParam}`)
+  //   .then((response) => response.data)
+  //   .then((data) => {
+  //     for (let i = 0; i < data.data.children.length; i++) {
+  //       let dataObj = {};
+  //       dataObj["post_title"] = data.data.children[i].data.title;
+  //       dataObj["subreddit"] =
+  //         data.data.children[i].data.subreddit_name_prefixed;
+  //       dataObj["author"] = data.data.children[i].data.author_fullname;
+  //       dataObj["post_url"] = data.data.children[i].data.url;
+  //       redditResults.push(dataObj);
+  //     }
+  //     return redditResults;
+  //   })
+  //   .then((data) => {
+  //     let sentimentResults = [];
+  //     data.forEach((post) => {
+  //       // Perform sentiment analysis
+  //       var sentResult = sentiment.analyze(post.post_title);
+  //       sentimentResults.push(sentResult);
+  //     });
+
+  //     return sentimentResults;
+  //   })
+  //   .then((data) => {
+  //     for (let i = 0; i < data.length; i++) {
+  //       let dataObj = {};
+  //       dataObj["post_title"] = redditResults[i].post_title;
+  //       dataObj["subreddit"] = redditResults[i].subreddit;
+  //       dataObj["author"] = redditResults[i].author;
+  //       dataObj["post_url"] = redditResults[i].post_url;
+  //       dataObj["sentiment_data"] = data[i];
+  //       results.posts.push(dataObj);
+  //     }
+  //     console.log(results.posts.length);
+  //     res.json(results);
+  //   })
+  //   .catch((err) => {
+  //     console.log(err.response);
+  //     res.json({ Error: true, Message: err.response });
+  //   });
 });
 
 // Old Endpoints from assignment 1 below for reference (will delete later)
