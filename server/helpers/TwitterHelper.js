@@ -27,7 +27,6 @@ function paramsToObject(entries) {
 }
 
 module.exports = {
-
     getTweets: function(queryString) {
         return new Promise((resolve, reject) => {
           
