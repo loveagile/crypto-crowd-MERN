@@ -30,27 +30,25 @@ router.get("/twitter/:search", (req, res) => {
     posts: [],
   };
 
-  let allTweets = []
-
   function getAllTweets(queryString, limit) {
     // Get tweets from helper function
     return TwitterHelper.getTweets(queryString).then((data) => {
-      // add newly returned tweets into allTweets
+      // add newly returned tweets into twitterResults
       data.tweets.forEach((tweet) => {
-        allTweets.push(tweet)
+        twitterResults.push(tweet)
       })
-      if (allTweets.length == limit) {
-        return allTweets;
+
+      if (twitterResults.length == limit) {
+        return twitterResults;
       } else {
-        // take the next_results querystring and recursively call it
-        const newQuerysting = data.search_metadata.next_results
+        // take the next_results querystring and recursively calls it
+        let newQuerysting = data.search_metadata.next_results
         return getAllTweets(newQuerysting, 500);
       }
     })
   }
 
   getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 500).then(data => {
-    twitterResults = data;
     // Perform sentiment analysis
     let sentimentResults = [];
     data.forEach((post) => {
