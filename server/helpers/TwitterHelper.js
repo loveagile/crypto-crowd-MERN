@@ -13,25 +13,33 @@ var client = new Twitter({
   access_token_secret: accessTokenSecret
 });
 
+function userDetails(tweet) {
+    return  {tweet_text: tweet.text, user: tweet.user.screen_name, user_profile_img: tweet.user.profile_image_url_https, created_at: tweet.created_at}
+}
+
+// create and object from a query string
+function paramsToObject(entries) {
+  const result = {}
+  for(const [key, value] of entries) { // each 'entry' is a [key, value] tupple
+    result[key] = value;
+  }
+  return result;
+}
+
 module.exports = {
-    getTweets: function(searchParam) {
+
+    getTweets: function(queryString) {
         return new Promise((resolve, reject) => {
-          // q - Search query
-          // count - Number of tweets to return in one request (100 is max)
-          // result_type - Mixed, Recent, or Popular
-          client.get('search/tweets', {q: searchParam, count: 100, result_type: 'mixed', include_entities: true}, function(error, tweets, response) {
-            let twitterResults = [];
-            
+          
+          // turn querystring into an object
+          const urlParams = new URLSearchParams(queryString);
+          const ent = urlParams.entries()
+          const objectParams = paramsToObject(ent)
+
+          client.get('search/tweets', objectParams, function(error, tweets, response) {
             if (!error) {
-              for (let i = 0; i < tweets.statuses.length; i++) {
-                  let dataObj = {};
-                  dataObj["tweet_text"] = tweets.statuses[i].text;
-                  dataObj["user"] = tweets.statuses[i].user.screen_name;
-                  dataObj["user_profile_img"] = tweets.statuses[i].user.profile_image_url_https;
-                  dataObj["created_at"] = tweets.statuses[i].created_at;
-                  twitterResults.push(dataObj);
-              }
-              return resolve(tweets)
+              const newTweets = { tweets: tweets.statuses.map(userDetails), search_metadata: tweets.search_metadata}
+              return resolve(newTweets)
             } else {
               return reject(error);
             }

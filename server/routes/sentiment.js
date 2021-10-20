@@ -30,10 +30,33 @@ router.get("/twitter/:search", (req, res) => {
     posts: [],
   };
 
-  // Get tweets from helper function
-  TwitterHelper.getTweets(searchParam).then((data) => {
-    res.json(data)
-  })
+  let allTweets = []
+
+  function getAllTweets(queryString, limit) {
+    // Get tweets from helper function
+    return TwitterHelper.getTweets(queryString).then((data) => {
+
+      // add newly returned tweets into allTweets
+      data.tweets.forEach((tweet) => {
+        allTweets.push(tweet)
+      })
+
+      if (allTweets.length == limit) {
+        return allTweets;
+      } else {
+        // take the next_results querystring and recursively call it
+        const newQuerysting = data.search_metadata.next_results
+        return getAllTweets(newQuerysting, 500);
+      }
+
+    })
+  }
+
+  getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 500).then(data => {
+    res.json(data);
+  }).catch((err) => {
+    res.json({ Error: true, Message: err.response });
+  });
 
   // const redditEndpoint = `http://www.reddit.com/search.json?limit=${limitParam}`;
 
