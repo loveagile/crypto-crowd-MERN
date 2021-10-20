@@ -20,26 +20,26 @@ function Twitter() {
   const [keywords, setKeywords] = useState([]);
 
   // Get Reddit data
-  const { loading, data, error } = GetSentimentData("reddit", coinName, 10);
+  const { loading, data, error } = GetSentimentData("twitter", coinName);
 
-  useEffect(() => {
-    if (loading === false) {
-      if (data.data) {
-        // Get Keywords for all posts
-        let words = [];
-        for (let i = 0; i < data.data.posts.length; i++) {
-          for (
-            let j = 0;
-            j < data.data.posts[i].sentiment_data.words.length;
-            j++
-          ) {
-            words.push(data.data.posts[i].sentiment_data.words[j]);
-          }
-        }
-        setKeywords(words);
-      }
-    }
-  }, [loading]);
+  // useEffect(() => {
+  //   if (loading === false) {
+  //     if (data.data) {
+  //       // Get Keywords for all posts
+  //       let words = [];
+  //       for (let i = 0; i < data.data.posts.length; i++) {
+  //         for (
+  //           let j = 0;
+  //           j < data.data.posts[i].sentiment_data.words.length;
+  //           j++
+  //         ) {
+  //           words.push(data.data.posts[i].sentiment_data.words[j]);
+  //         }
+  //       }
+  //       setKeywords(words);
+  //     }
+  //   }
+  // }, [loading]);
 
   return (
     <div className="container my-5">
@@ -79,7 +79,7 @@ function Twitter() {
             </div>
             <div className="col-3 border py-3 text-center rounded data-summary">
               <p className="fw-bold p-0 m-0">Keywords</p>
-              {loading === true ? (
+              {/* {loading === true ? (
                 <ScaleLoader color="#0d6efd" />
               ) : (
                 <TagCloud
@@ -107,7 +107,7 @@ function Twitter() {
                     );
                   })}
                 </TagCloud>
-              )}
+              )} */}
             </div>
           </div>
 
@@ -141,27 +141,34 @@ function Twitter() {
                     return (
                       <div
                         className="border rounded my-4 p-3 d-flex"
-                        key={post.title}
+                        key={post.tweet_text}
                       >
                         <div className="d-flex align-items-center flex-column justify-content-center twitter-img-container">
                           <img
-                            src="https://via.placeholder.com/100"
+                            src={post.user_profile_img}
                             alt="twitter profile"
                             className="twitter-image"
                           />
-                          <p className="fw-bold text-center mt-2">Username</p>
+                          <p className="fw-bold text-center mt-2">{post.user}</p>
                         </div>
                         <div class="twitter-info-container">
                           <h5 className="my-2">
                             <a
-                              className="text-decoration-none"
-                              href={post.post_url}
+                              className={`text-decoration-none ${!post.tweet_url ? "text-black link-disabled" : ""}`}
+                              href={post.tweet_url ? post.tweet_url : "#"}
                               target="_blank"
                               rel="noreferrer"
                             >
-                              {post.post_title}
+                              {post.tweet_text}
                             </a>
                           </h5>
+
+                          <p className="text-capitalize my-2">
+                            <b>Posted:</b>{" "}
+                            <span className="mx-1">
+                              {post.created_at}
+                            </span>
+                          </p>
 
                           {(() => {
                             if (post.sentiment_data.score > 0) {

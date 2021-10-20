@@ -6,7 +6,6 @@ const router = express.Router();
 var Sentiment = require("sentiment");
 var sentiment = new Sentiment();
 
-const getTweets = require("../helpers/TwitterHelper");
 const TwitterHelper = require("../helpers/TwitterHelper");
 
 router.use(logger("tiny"));
@@ -18,6 +17,8 @@ router.use(logger("tiny"));
 router.get("/twitter/:search", (req, res) => {
   let searchParam = req.params.search;
 
+  let twitterResults = [];
+
   // Used for finding average senmtiment score
   let sentimentScores = [];
 
@@ -25,7 +26,6 @@ router.get("/twitter/:search", (req, res) => {
   let results = {
     averages: {
       average_score: 0,
-      post_types: [],
     },
     posts: [],
   };
@@ -57,8 +57,36 @@ router.get("/twitter/:search", (req, res) => {
   }).catch((err) => {
     res.json({ Error: true, Message: err.response });
   });
+  // Get tweets from helper function
+  
+  TwitterHelper.getTweets(searchParam).then((data) => {
+    twitterResults = data;
+    // Perform sentiment analysis
+    let sentimentResults = [];
+      data.forEach((post) => {
+        // Perform sentiment analysis
+        var sentResult = sentiment.analyze(post.tweet_text);
+        sentimentResults.push(sentResult);
+      });
 
-  // const redditEndpoint = `http://www.reddit.com/search.json?limit=${limitParam}`;
+      return sentimentResults;
+  }).then((data) => {
+      // Format twitter data and sentiment data together
+      for (let i = 0; i < data.length; i++) {
+        let dataObj = {};
+        dataObj["user"] = twitterResults[i].user;
+        dataObj["tweet_text"] = twitterResults[i].tweet_text;
+        dataObj["tweet_url"] = twitterResults[i].tweet_url;
+        dataObj["user_profile_img"] = twitterResults[i].user_profile_img;
+        dataObj["created_at"] = twitterResults[i].created_at;
+        dataObj["sentiment_data"] = data[i];
+        results.posts.push(dataObj);
+      }
+      res.json(results);
+  }).catch((err) => {
+    console.log(err.response);
+    res.json({ Error: true, Message: err.response });
+  });
 
   // axios
   //   .get(`${redditEndpoint}&q=${searchParam}`)
