@@ -35,12 +35,10 @@ router.get("/twitter/:search", (req, res) => {
   function getAllTweets(queryString, limit) {
     // Get tweets from helper function
     return TwitterHelper.getTweets(queryString).then((data) => {
-
       // add newly returned tweets into allTweets
       data.tweets.forEach((tweet) => {
         allTweets.push(tweet)
       })
-
       if (allTweets.length == limit) {
         return allTweets;
       } else {
@@ -48,7 +46,6 @@ router.get("/twitter/:search", (req, res) => {
         const newQuerysting = data.search_metadata.next_results
         return getAllTweets(newQuerysting, 500);
       }
-
     })
   }
 
@@ -56,14 +53,13 @@ router.get("/twitter/:search", (req, res) => {
     twitterResults = data;
     // Perform sentiment analysis
     let sentimentResults = [];
-      data.forEach((post) => {
-        // Perform sentiment analysis
-        var sentResult = sentiment.analyze(post.tweet_text);
-        sentimentResults.push(sentResult);
-      });
-
-      return sentimentResults;
-  }).then((data) => {
+    data.forEach((post) => {
+      // Perform sentiment analysis
+      var sentResult = sentiment.analyze(post.tweet_text);
+      sentimentResults.push(sentResult);
+    });
+    return sentimentResults;
+    }).then((data) => {
       // Format twitter data and sentiment data together
       for (let i = 0; i < data.length; i++) {
         let dataObj = {};
@@ -74,87 +70,12 @@ router.get("/twitter/:search", (req, res) => {
         dataObj["created_at"] = twitterResults[i].created_at;
         dataObj["sentiment_data"] = data[i];
         results.posts.push(dataObj);
-      } 
+      }
       res.json(results);
-  }).catch((err) => {
-    console.log(err.response);
-    res.json({ Error: true, Message: err.response });
+    }).catch((err) => {
+      res.json({ Error: true, Message: err.response });
+    });
   });
-
-  // Get tweets from helper function
-  
-  // TwitterHelper.getTweets(searchParam).then((data) => {
-  //   twitterResults = data;
-  //   // Perform sentiment analysis
-  //   let sentimentResults = [];
-  //     data.forEach((post) => {
-  //       // Perform sentiment analysis
-  //       var sentResult = sentiment.analyze(post.tweet_text);
-  //       sentimentResults.push(sentResult);
-  //     });
-
-  //     return sentimentResults;
-  // }).then((data) => {
-  //     // Format twitter data and sentiment data together
-  //     for (let i = 0; i < data.length; i++) {
-  //       let dataObj = {};
-  //       dataObj["user"] = twitterResults[i].user;
-  //       dataObj["tweet_text"] = twitterResults[i].tweet_text;
-  //       dataObj["tweet_url"] = twitterResults[i].tweet_url;
-  //       dataObj["user_profile_img"] = twitterResults[i].user_profile_img;
-  //       dataObj["created_at"] = twitterResults[i].created_at;
-  //       dataObj["sentiment_data"] = data[i];
-  //       results.posts.push(dataObj);
-  //     }
-  //     res.json(results);
-  // }).catch((err) => {
-  //   console.log(err.response);
-  //   res.json({ Error: true, Message: err.response });
-  // });
-
-  // axios
-  //   .get(`${redditEndpoint}&q=${searchParam}`)
-  //   .then((response) => response.data)
-  //   .then((data) => {
-  //     for (let i = 0; i < data.data.children.length; i++) {
-  //       let dataObj = {};
-  //       dataObj["post_title"] = data.data.children[i].data.title;
-  //       dataObj["subreddit"] =
-  //         data.data.children[i].data.subreddit_name_prefixed;
-  //       dataObj["author"] = data.data.children[i].data.author_fullname;
-  //       dataObj["post_url"] = data.data.children[i].data.url;
-  //       redditResults.push(dataObj);
-  //     }
-  //     return redditResults;
-  //   })
-  //   .then((data) => {
-  //     let sentimentResults = [];
-  //     data.forEach((post) => {
-  //       // Perform sentiment analysis
-  //       var sentResult = sentiment.analyze(post.post_title);
-  //       sentimentResults.push(sentResult);
-  //     });
-
-  //     return sentimentResults;
-  //   })
-  //   .then((data) => {
-  //     for (let i = 0; i < data.length; i++) {
-  //       let dataObj = {};
-  //       dataObj["post_title"] = redditResults[i].post_title;
-  //       dataObj["subreddit"] = redditResults[i].subreddit;
-  //       dataObj["author"] = redditResults[i].author;
-  //       dataObj["post_url"] = redditResults[i].post_url;
-  //       dataObj["sentiment_data"] = data[i];
-  //       results.posts.push(dataObj);
-  //     }
-  //     console.log(results.posts.length);
-  //     res.json(results);
-  //   })
-  //   .catch((err) => {
-  //     console.log(err.response);
-  //     res.json({ Error: true, Message: err.response });
-  //   });
-});
 
 // Old Endpoints from assignment 1 below for reference (will delete later)
 
