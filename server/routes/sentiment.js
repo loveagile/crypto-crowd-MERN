@@ -3,6 +3,7 @@ const axios = require("axios");
 const https = require("https");
 const logger = require("morgan");
 const router = express.Router();
+const redis = require("redis")
 var Sentiment = require("sentiment");
 var sentiment = new Sentiment();
 
@@ -59,6 +60,7 @@ router.get("/twitter/:search", (req, res) => {
     return sentimentResults;
     }).then((data) => {
       // Format twitter data and sentiment data together
+      
       for (let i = 0; i < data.length; i++) {
         let dataObj = {};
         dataObj["user"] = twitterResults[i].user;
@@ -67,8 +69,18 @@ router.get("/twitter/:search", (req, res) => {
         dataObj["user_profile_img"] = twitterResults[i].user_profile_img;
         dataObj["created_at"] = twitterResults[i].created_at;
         dataObj["sentiment_data"] = data[i];
+
+        // push score so we can perform and average later
+        sentimentScores.push(data[i].score)
+
         results.posts.push(dataObj);
       }
+
+       // Get average score
+      const sumScore = sentimentScores.reduce((a, b) => a + b, 0);
+      const avgScore = sumScore / sentimentScores.length || 0;
+      results.averages.average_score = avgScore;
+
       res.json(results);
     }).catch((err) => {
       res.json({ Error: true, Message: err.response });
