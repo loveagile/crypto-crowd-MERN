@@ -50,6 +50,7 @@ router.get("/twitter/:search", (req, res) => {
   }
 
   getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 500).then(data => {
+    console.log(data)
     // Perform sentiment analysis
     let sentimentResults = [];
     data.forEach((post) => {
@@ -83,9 +84,11 @@ router.get("/twitter/:search", (req, res) => {
 
       res.json(results);
     }).catch((err) => {
-      res.json({ Error: true, Message: err.response });
+      res.json({ Error: true, Details: err });
     });
   });
+
+  
 
 // Old Endpoints from assignment 1 below for reference (will delete later)
 
