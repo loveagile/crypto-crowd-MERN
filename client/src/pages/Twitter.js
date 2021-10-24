@@ -74,7 +74,7 @@ function Twitter() {
               </p>
 
               <div className="h-75 d-flex justify-content-center align-items-center">
-                <p>Average Score Goes Here</p>
+                <h3 className="text-muted">{data.data?.averages.average_score}</h3>
               </div>
             </div>
             <div className="col-3 border py-3 text-center rounded data-summary">

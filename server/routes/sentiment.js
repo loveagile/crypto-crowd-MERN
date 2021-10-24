@@ -6,14 +6,17 @@ const router = express.Router();
 const redis = require("redis")
 var Sentiment = require("sentiment");
 var sentiment = new Sentiment();
+const AWS = require("aws-sdk");
 
 const TwitterHelper = require("../helpers/TwitterHelper");
 
-router.use(logger("tiny"));
+const redisClient = redis.createClient();
 
-// TODO: Implement sentiment analysis on Reddit and News post titles
-// At the moment I have installed the 'sentiment' Node.js but we could
-// change this to something else if there is a better package
+redisClient.on("error", (err) => {
+  console.log("Error " + err);
+});
+
+router.use(logger("tiny"));
 
 router.get("/twitter/:search", (req, res) => {
   let searchParam = req.params.search;
@@ -30,7 +33,7 @@ router.get("/twitter/:search", (req, res) => {
     },
     posts: [],
   };
-
+  
   function getAllTweets(queryString, limit) {
     // Get tweets from helper function
     return TwitterHelper.getTweets(queryString).then((data) => {
@@ -44,49 +47,62 @@ router.get("/twitter/:search", (req, res) => {
       } else {
         // take the next_results querystring and recursively calls it
         let newQuerysting = data.search_metadata.next_results
-        return getAllTweets(newQuerysting, 500);
+        return getAllTweets(newQuerysting, 100);
       }
     })
   }
 
-  getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 500).then(data => {
-    console.log(data)
-    // Perform sentiment analysis
-    let sentimentResults = [];
-    data.forEach((post) => {
-      // Perform sentiment analysis
-      var sentResult = sentiment.analyze(post.tweet_text);
-      sentimentResults.push(sentResult);
-    });
-    return sentimentResults;
-    }).then((data) => {
-      // Format twitter data and sentiment data together
-      
-      for (let i = 0; i < data.length; i++) {
-        let dataObj = {};
-        dataObj["user"] = twitterResults[i].user;
-        dataObj["tweet_text"] = twitterResults[i].tweet_text;
-        dataObj["tweet_url"] = twitterResults[i].tweet_url;
-        dataObj["user_profile_img"] = twitterResults[i].user_profile_img;
-        dataObj["created_at"] = twitterResults[i].created_at;
-        dataObj["sentiment_data"] = data[i];
-
-        // push score so we can perform and average later
-        sentimentScores.push(data[i].score)
-
-        results.posts.push(dataObj);
-      }
-
-       // Get average score
-      const sumScore = sentimentScores.reduce((a, b) => a + b, 0);
-      const avgScore = sumScore / sentimentScores.length || 0;
-      results.averages.average_score = avgScore;
-
-      res.json(results);
-    }).catch((err) => {
-      res.json({ Error: true, Details: err });
-    });
+  return redisClient.get(searchParam, (err, result) => {
+    if (result) {
+      // Serve from cache if in Redis
+      const resultJSON = JSON.parse(result);
+      console.log("Found in cache");
+      return res.status(100).json(resultJSON);
+    } else {
+      console.log("Didnt find in cache");
+      getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 100).then(data => {
+        // console.log(data)
+        // Perform sentiment analysis
+        let sentimentResults = [];
+        data.forEach((post) => {
+          // Perform sentiment analysis
+          var sentResult = sentiment.analyze(post.tweet_text);
+          sentimentResults.push(sentResult);
+        });
+        return sentimentResults;
+        }).then((data) => {
+          // Format twitter data and sentiment data together
+          
+          for (let i = 0; i < data.length; i++) {
+            let dataObj = {};
+            dataObj["user"] = twitterResults[i].user;
+            dataObj["tweet_text"] = twitterResults[i].tweet_text;
+            dataObj["tweet_url"] = twitterResults[i].tweet_url;
+            dataObj["user_profile_img"] = twitterResults[i].user_profile_img;
+            dataObj["created_at"] = twitterResults[i].created_at;
+            dataObj["sentiment_data"] = data[i];
+    
+            // push score so we can perform and average later
+            sentimentScores.push(data[i].score)
+    
+            results.posts.push(dataObj);
+          }
+    
+          // Get average score
+          const sumScore = sentimentScores.reduce((a, b) => a + b, 0);
+          const avgScore = sumScore / sentimentScores.length || 0;
+          results.averages.average_score = avgScore;
+    
+          Store in cache
+          redisClient.setex(searchParam, 3600, JSON.stringify(results));
+    
+          res.json(results);
+        }).catch((err) => {
+          res.json({ Error: true, Details: err });
+        });
+    }
   });
+});
 
   
 
