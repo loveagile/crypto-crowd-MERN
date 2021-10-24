@@ -3,14 +3,12 @@ var Twitter = require('twitter');
 // Twitter API details
 const apikey = process.env.apikey;
 const apiKeySecret = process.env.apikeysecret;
-const accessToken = process.env.accesstoken;
-const accessTokenSecret = process.env.accesstokensecret;
+const bearerToken = process.env.bearertoken;
 
 var client = new Twitter({
   consumer_key: apikey,
   consumer_secret: apiKeySecret,
-  access_token_key: accessToken,
-  access_token_secret: accessTokenSecret
+  bearer_token: bearerToken
 });
 
 function userDetails(tweet) {
@@ -34,10 +32,11 @@ module.exports = {
           const urlParams = new URLSearchParams(queryString);
           const ent = urlParams.entries()
           const objectParams = paramsToObject(ent)
-
+          
           client.get('search/tweets', objectParams, function(error, tweets, response) {
             if (!error) {
               const newTweets = { tweets: tweets.statuses.map(userDetails), search_metadata: tweets.search_metadata}
+              console.log("Request here") // For testing
               return resolve(newTweets)
             } else {
               return reject(error);
