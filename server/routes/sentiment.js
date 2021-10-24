@@ -56,7 +56,7 @@ router.get("/twitter/:search", (req, res) => {
       } else {
         // take the next_results querystring and recursively calls it
         let newQuerysting = data.search_metadata.next_results
-        return getAllTweets(newQuerysting, 500);
+        return getAllTweets(newQuerysting, 100);
       }
     })
   }
@@ -71,7 +71,7 @@ router.get("/twitter/:search", (req, res) => {
       BucketHelper.getObj(s3Params).then(function (data) {
         const tweets = JSON.parse(data.Body);
         redisClient.setex(searchParam, 3600, JSON.stringify(tweets));
-        res.json(tweets);
+        return res.json(tweets);
       }).catch((e) => {
         if (!BucketHelper.keyExists(e)) {
           getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 100).then(data => {
@@ -112,12 +112,12 @@ router.get("/twitter/:search", (req, res) => {
             const newObjectParams = { Bucket: s3Params.Bucket, Key: s3Params.Key, Body: JSON.stringify(results) };
             BucketHelper.upload(newObjectParams)
 
-            res.json(results);
+            return res.json(results);
           }).catch((e) => {
-            res.json({ Error: true, Details: e });
+            return res.json({ Error: true, Details: e });
           });
         } else {
-          res.json({ Error: true, Details: e });
+          return res.json({ Error: true, Details: e });
         }
       });
     }
