@@ -18,22 +18,6 @@ redisClient.on("error", (err) => {
 
 router.use(logger("tiny"));
 
-router.get("/twitter/:search", (req, res) => {
-  let searchParam = req.params.search;
-
-  let twitterResults = [];
-
-  // Used for finding average senmtiment score
-  let sentimentScores = [];
-
-  // Final aggregated results from both APIs
-  let results = {
-    averages: {
-      average_score: 0,
-    },
-    posts: [],
-  };
-
 // TODO: Implement sentiment analysis on Reddit and News post titles
 // At the moment I have installed the 'sentiment' Node.js but we could
 // change this to something else if there is a better package
@@ -54,133 +38,90 @@ router.get("/twitter/:search", (req, res) => {
     posts: [],
   };
 
-  // s3Params = {
-  //   Bucket: 'cryptomate-bucket',
-  //   Key: `twitter-${searchParam}`
-  // }
+  s3Params = {
+    Bucket: 'cryptomate-bucket',
+    Key: `twitter-${searchParam}`
+  }
 
   function getAllTweets(queryString, limit) {
-      // Get tweets from helper function
-      return TwitterHelper.getTweets(queryString).then((data) => {
-        // add newly returned tweets into twitterResults
-        data.tweets.forEach((tweet) => {
-          twitterResults.push(tweet)
-        })
-
-        if (twitterResults.length == limit) {
-          return twitterResults;
-        } else {
-          // take the next_results querystring and recursively calls it
-          let newQuerysting = data.search_metadata.next_results
-          return getAllTweets(newQuerysting, 500);
-        }
+    // Get tweets from helper function
+    return TwitterHelper.getTweets(queryString).then((data) => {
+      // add newly returned tweets into twitterResults
+      data.tweets.forEach((tweet) => {
+        twitterResults.push(tweet)
       })
-    }
 
-    return redisClient.get(searchParam, (err, result) => {
+      if (twitterResults.length == limit) {
+        return twitterResults;
+      } else {
+        // take the next_results querystring and recursively calls it
+        let newQuerysting = data.search_metadata.next_results
+        return getAllTweets(newQuerysting, 500);
+      }
+    })
+  }
+
+  return redisClient.get(searchParam, (err, result) => {
     if (result) {
       // Serve from cache if in Redis
       const resultJSON = JSON.parse(result);
-      console.log("Found in cache");
       return res.status(200).json(resultJSON);
     } else {
-      console.log("Didnt find in cache");
-      getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 100).then(data => {
+      // Check S3
+      BucketHelper.getObj(s3Params).then(function (data) {
+        const tweets = JSON.parse(data.Body);
+        redisClient.setex(searchParam, 3600, JSON.stringify(tweets));
+        res.json(tweets);
+      }).catch((e) => {
+        if (!BucketHelper.keyExists(e)) {
+          getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 100).then(data => {
+            // Perform sentiment analysis
+            let sentimentResults = [];
+            data.forEach((post) => {
+              // Perform sentiment analysis
+              var sentResult = sentiment.analyze(post.tweet_text);
+              sentimentResults.push(sentResult);
+            });
+            return sentimentResults;
+          }).then((data) => {
+            // Format twitter data and sentiment data together
 
-        // Perform sentiment analysis
-        let sentimentResults = [];
-        data.forEach((post) => {
-          // Perform sentiment analysis
-          var sentResult = sentiment.analyze(post.tweet_text);
-          sentimentResults.push(sentResult);
-        });
-        return sentimentResults;
-        }).then((data) => {
-          // Format twitter data and sentiment data together
-          for (let i = 0; i < data.length; i++) {
-            let dataObj = {};
-            dataObj["user"] = twitterResults[i].user;
-            dataObj["tweet_text"] = twitterResults[i].tweet_text;
-            dataObj["tweet_url"] = twitterResults[i].tweet_url;
-            dataObj["user_profile_img"] = twitterResults[i].user_profile_img;
-            dataObj["created_at"] = twitterResults[i].created_at;
-            dataObj["sentiment_data"] = data[i];
-    
-            // Store score so we can perform and average later
-            sentimentScores.push(data[i].score)
-            results.posts.push(dataObj);
-          }
-    
-          // Get average score
-          const sumScore = sentimentScores.reduce((a, b) => a + b, 0);
-          const avgScore = sumScore / sentimentScores.length || 0;
-          results.averages.average_score = avgScore;
-    
-          // Store in cache
-          redisClient.setex(searchParam, 3600, JSON.stringify(results));
-    
-          res.json(results);
-        }).catch((err) => {
-          res.json({ Error: true, Details: err.response });
-        });
+            for (let i = 0; i < data.length; i++) {
+              let dataObj = {};
+              dataObj["user"] = twitterResults[i].user;
+              dataObj["tweet_text"] = twitterResults[i].tweet_text;
+              dataObj["tweet_url"] = twitterResults[i].tweet_url;
+              dataObj["user_profile_img"] = twitterResults[i].user_profile_img;
+              dataObj["created_at"] = twitterResults[i].created_at;
+              dataObj["sentiment_data"] = data[i];
+
+              // Store score so we can perform and average later
+              sentimentScores.push(data[i].score)
+              results.posts.push(dataObj);
+            }
+
+            // Get average score
+            const sumScore = sentimentScores.reduce((a, b) => a + b, 0);
+            const avgScore = sumScore / sentimentScores.length || 0;
+            results.averages.average_score = avgScore;
+
+            // Store in cache
+            redisClient.setex(searchParam, 3600, JSON.stringify(results));
+
+            // store in s3
+            const newObjectParams = { Bucket: s3Params.Bucket, Key: s3Params.Key, Body: JSON.stringify(results) };
+            BucketHelper.upload(newObjectParams)
+
+            res.json(results);
+          }).catch((e) => {
+            res.json({ Error: true, Details: e });
+          });
+        } else {
+          res.json({ Error: true, Details: e });
+        }
+      });
     }
   });
-});
-
-
-  // check in S3
-
-  // BucketHelper.getObj(s3Params).then(function (data) {
-  //   const tweets = JSON.parse(data.Body);
-  //   res.json(tweets);
-  // }).catch((e) => {
-
-  //   if (!BucketHelper.keyExists(e)) {
-  //     getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 100).then(data => {
-  //       // Perform sentiment analysis
-  //       let sentimentResults = [];
-  //       data.forEach((post) => {
-  //         // Perform sentiment analysis
-  //         var sentResult = sentiment.analyze(post.tweet_text);
-  //         sentimentResults.push(sentResult);
-  //       });
-  //       return sentimentResults;
-  //     }).then((data) => {
-  //       // Format twitter data and sentiment data together
-
-  //       for (let i = 0; i < data.length; i++) {
-  //         let dataObj = {};
-  //         dataObj["user"] = twitterResults[i].user;
-  //         dataObj["tweet_text"] = twitterResults[i].tweet_text;
-  //         dataObj["tweet_url"] = twitterResults[i].tweet_url;
-  //         dataObj["user_profile_img"] = twitterResults[i].user_profile_img;
-  //         dataObj["created_at"] = twitterResults[i].created_at;
-  //         dataObj["sentiment_data"] = data[i];
-
-  //         // push score so we can perform and average later
-  //         sentimentScores.push(data[i].score)
-
-  //         results.posts.push(dataObj);
-  //       }
-
-  //       // Get average score
-  //       const sumScore = sentimentScores.reduce((a, b) => a + b, 0);
-  //       const avgScore = sumScore / sentimentScores.length || 0;
-  //       results.averages.average_score = avgScore;
-
-  //       // store in s3
-  //       const newObjectParams = { Bucket: s3Params.Bucket, Key: s3Params.Key, Body: JSON.stringify(results) };
-  //       BucketHelper.upload(newObjectParams)
-
-  //       res.json(results);
-  //       return;
-  //     }).catch((e) => {
-  //       res.json({ Error: true, Details: e });
-  //     });
-  //   } else {
-  //     res.json({ Error: true, Details: e });
-  //   } 
-  // });
 });
 
 
