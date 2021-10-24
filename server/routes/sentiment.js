@@ -57,11 +57,11 @@ router.get("/twitter/:search", (req, res) => {
       // Serve from cache if in Redis
       const resultJSON = JSON.parse(result);
       console.log("Found in cache");
-      return res.status(100).json(resultJSON);
+      return res.status(200).json(resultJSON);
     } else {
       console.log("Didnt find in cache");
       getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 100).then(data => {
-        // console.log(data)
+
         // Perform sentiment analysis
         let sentimentResults = [];
         data.forEach((post) => {
@@ -72,7 +72,6 @@ router.get("/twitter/:search", (req, res) => {
         return sentimentResults;
         }).then((data) => {
           // Format twitter data and sentiment data together
-          
           for (let i = 0; i < data.length; i++) {
             let dataObj = {};
             dataObj["user"] = twitterResults[i].user;
@@ -82,9 +81,8 @@ router.get("/twitter/:search", (req, res) => {
             dataObj["created_at"] = twitterResults[i].created_at;
             dataObj["sentiment_data"] = data[i];
     
-            // push score so we can perform and average later
+            // Store score so we can perform and average later
             sentimentScores.push(data[i].score)
-    
             results.posts.push(dataObj);
           }
     
@@ -93,12 +91,12 @@ router.get("/twitter/:search", (req, res) => {
           const avgScore = sumScore / sentimentScores.length || 0;
           results.averages.average_score = avgScore;
     
-          Store in cache
+          // Store in cache
           redisClient.setex(searchParam, 3600, JSON.stringify(results));
     
           res.json(results);
         }).catch((err) => {
-          res.json({ Error: true, Details: err });
+          res.json({ Error: true, Details: err.response });
         });
     }
   });
