@@ -1,38 +1,17 @@
 require('dotenv').config();
 const AWS = require('aws-sdk');
+const S3 = new AWS.S3();
 
-var s3 = new AWS.S3();
+function keyExists(value) {
+    if (value == "NoSuchKey") return false
+    else return true
+}
 
 module.exports = {
 
-    keyExists: function (value) {
-        if (value.code == "NoSuchKey") return false
-        else return true
-    },
-
-    upload: function (params) {
+    uploadObject: function (Bucket, Key, Body) {
         return new Promise((resolve, reject) => {
-
-            s3.upload(params, function (err, data) {
-
-                //success
-                if (data) {
-                    resolve("Uploaded in:", data.Location);
-                }
-                //handle error
-                if (err) {
-                    reject(err)
-                }
-
-            });
-        })
-    },
-
-    getObj: function (params) {
-        return new Promise((resolve, reject) => {
-
-            s3.getObject(params, function (err, data) {
-
+            S3.upload({ Bucket, Key, Body }, function (err, data) {
                 //success
                 if (data) {
                     resolve(data);
@@ -41,23 +20,25 @@ module.exports = {
                 if (err) {
                     reject(err)
                 }
-
             });
         })
     },
 
-    // createBucket: function (bucketName) {
-    //     return new Promise((resolve, reject) => {
-
-    //         // Create a promise on S3 service object
-    //         const bucketPromise = new AWS.S3({ apiVersion: '2006-03-01' }).createBucket({ Bucket: bucketName }).promise();
-    //         bucketPromise.then(function (data) {
-    //             resolve("Successfully created " + bucketName);
-    //         })
-    //         .catch(function (err) {
-    //             reject(err)
-    //         });
-    //     })
-    // }
-
+    getObject: function (Bucket, Key) {
+        return new Promise((resolve, reject) => {
+            S3.getObject({ Bucket, Key }, function (err, data) {
+                //success
+                if (data) {
+                    resolve(data);
+                }
+                //handle error
+                if (err) {
+                    if (!keyExists(err.code)) {
+                        return resolve(false)
+                    }
+                    reject(err)
+                }
+            });
+        })
+    },
 }
