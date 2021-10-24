@@ -8,7 +8,11 @@ function keyExists(value) {
 }
 
 module.exports = {
-
+    /**
+     * @param  {string} Bucket - S3 bucket name
+     * @param  {string} Key - S3 key (key-value)
+     * @param  {Array} Body - Results to upload
+     */
     uploadObject: function (Bucket, Key, Body) {
         return new Promise((resolve, reject) => {
             S3.upload({ Bucket, Key, Body }, function (err, data) {
@@ -24,6 +28,10 @@ module.exports = {
         })
     },
 
+    /**
+     * @param  {string} Bucket - S3 bucket name
+     * @param  {string} Key - S3 key (key-value)
+     */
     getObject: function (Bucket, Key) {
         return new Promise((resolve, reject) => {
             S3.getObject({ Bucket, Key }, function (err, data) {
@@ -33,7 +41,8 @@ module.exports = {
                 }
                 //handle error
                 if (err) {
-                    if (!keyExists(err.code)) {
+                    const bucketKey = err.code;
+                    if (!keyExists(bucketKey)) {
                         return resolve(false)
                     }
                     reject(err)
