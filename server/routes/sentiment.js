@@ -84,10 +84,20 @@ router.get("/twitter/:search", (req, res) => {
               // Perform sentiment analysis
               let sentimentResults = [];
               data.forEach((post) => {
+                // Removes @ mentions in the tweets
+                function cleanData (data) {
+                  regex = /(@\w*)|((?:https?):\/\/[\n\S]+)|RT/g
+                  let newstr = data.replace(regex, '')
+                  return newstr
+                }
+
+                let cleanTweet = cleanData(post.tweet_text)
+                console.log(cleanTweet)
+
                 // Perform sentiment analysis
-                var sentResult = sentiment.analyze(post.tweet_text);
+                var sentResult = sentiment.analyze(cleanTweet);
                 sentimentResults.push(sentResult);
-                console.log(sentResult)
+                
                 if (sentResult.score === 0) {
                   results.averages.all_scores.neutral += 1;
                 } else if (sentResult.score < 0) {
