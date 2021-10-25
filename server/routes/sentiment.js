@@ -87,8 +87,8 @@ router.get("/twitter/:search", (req, res) => {
                 // Removes @ mentions in the tweets
                 function cleanData (data) {
                   regex = /(@\w*)|((?:https?):\/\/[\n\S]+)|RT/g
-                  let newstr = data.replace(regex, '')
-                  return newstr
+                  let newstring = data.replace(regex, '')
+                  return newstring
                 }
 
                 let cleanTweet = cleanData(post.tweet_text)
