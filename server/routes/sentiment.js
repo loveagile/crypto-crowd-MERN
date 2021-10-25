@@ -34,6 +34,11 @@ router.get("/twitter/:search", (req, res) => {
   let results = {
     averages: {
       average_score: 0,
+      all_scores: {
+        positive: 0,
+        negative: 0,
+        neutral: 0
+      }
     },
     posts: [],
   };
@@ -82,6 +87,14 @@ router.get("/twitter/:search", (req, res) => {
                 // Perform sentiment analysis
                 var sentResult = sentiment.analyze(post.tweet_text);
                 sentimentResults.push(sentResult);
+                console.log(sentResult)
+                if (sentResult.score === 0) {
+                  results.averages.all_scores.neutral += 1;
+                } else if (sentResult.score < 0) {
+                  results.averages.all_scores.negative += 1;
+                } else if (sentResult.score > 0) {
+                  results.averages.all_scores.positive += 1;
+                }
               });
               return sentimentResults;
             }).then((data) => {
