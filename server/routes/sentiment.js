@@ -54,7 +54,7 @@ router.get("/twitter/:search", (req, res) => {
       } else {
         // take the next_results querystring and recursively calls it
         let newQuerysting = data.search_metadata.next_results
-        return getAllTweets(newQuerysting, 300);
+        return getAllTweets(newQuerysting, 500);
       }
     })
   }
@@ -75,7 +75,7 @@ router.get("/twitter/:search", (req, res) => {
             console.log("Serve from S3")
             return res.json(tweets);
           } else {
-            getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 300).then(data => {
+            getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 500).then(data => {
               // Perform sentiment analysis
               let sentimentResults = [];
               data.forEach((post) => {
