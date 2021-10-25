@@ -22,24 +22,25 @@ function Twitter() {
   // Get Reddit data
   const { loading, data, error } = GetSentimentData("twitter", coinName);
 
-  // useEffect(() => {
-  //   if (loading === false) {
-  //     if (data.data) {
-  //       // Get Keywords for all posts
-  //       let words = [];
-  //       for (let i = 0; i < data.data.posts.length; i++) {
-  //         for (
-  //           let j = 0;
-  //           j < data.data.posts[i].sentiment_data.words.length;
-  //           j++
-  //         ) {
-  //           words.push(data.data.posts[i].sentiment_data.words[j]);
-  //         }
-  //       }
-  //       setKeywords(words);
-  //     }
-  //   }
-  // }, [loading]);
+  useEffect(() => {
+    if (loading === false) {
+      // if (data.data) {
+      //   // Get Keywords for all posts
+      //   let words = [];
+      //   for (let i = 0; i < data.data.posts.length; i++) {
+      //     for (
+      //       let j = 0;
+      //       j < data.data.posts[i].sentiment_data.words.length;
+      //       j++
+      //     ) {
+      //       words.push(data.data.posts[i].sentiment_data.words[j]);
+      //     }
+      //   }
+      //   setKeywords(words);
+      // }
+      
+    }
+  }, [loading]);
 
   return (
     <div className="container my-5">
@@ -61,7 +62,7 @@ function Twitter() {
                 {loading === true ? (
                   <ScaleLoader color="#0d6efd" />
                 ) : (
-                  <PieChart distributionData={sentDistribution} />
+                  <PieChart distributionData={data.data?.averages.all_scores} />
                 )}
               </div>
             </div>

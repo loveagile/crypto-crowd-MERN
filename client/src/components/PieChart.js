@@ -16,7 +16,7 @@ function Chart(props) {
 
   // Format data for chart.js
   const data = {
-    labels: ["Positive (%)", "Negative (%)", "Neutral (%)"],
+    labels: [" Positive", " Negative", " Neutral"],
     datasets: [
       {
         data: chartData,
