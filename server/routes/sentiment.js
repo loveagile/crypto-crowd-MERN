@@ -38,7 +38,8 @@ router.get("/twitter/:search", (req, res) => {
         positive: 0,
         negative: 0,
         neutral: 0
-      }
+      },
+      keywords: []
     },
     posts: [],
   };
@@ -59,7 +60,7 @@ router.get("/twitter/:search", (req, res) => {
       } else {
         // take the next_results querystring and recursively calls it
         let newQuerysting = data.search_metadata.next_results
-        return getAllTweets(newQuerysting, 500);
+        return getAllTweets(newQuerysting, 2000);
       }
     })
   }
@@ -80,7 +81,7 @@ router.get("/twitter/:search", (req, res) => {
             console.log("Serve from S3")
             return res.json(tweets);
           } else {
-            getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 500).then(data => {
+            getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 2000).then(data => {
               // Perform sentiment analysis
               let sentimentResults = [];
               data.forEach((post) => {
@@ -92,12 +93,21 @@ router.get("/twitter/:search", (req, res) => {
                 }
 
                 let cleanTweet = cleanData(post.tweet_text)
-                console.log(cleanTweet)
 
                 // Perform sentiment analysis
                 var sentResult = sentiment.analyze(cleanTweet);
+
+                // Store all keywords (positive & negative)
+                sentResult.words.forEach(word => {
+                  // Check if word is already in array
+                  if (!results.averages.keywords.includes(word)) {
+                    results.averages.keywords.push(word);
+                  }
+                })
+
                 sentimentResults.push(sentResult);
                 
+                // Record tally for positive, negative, neutral result (for pie chart)
                 if (sentResult.score === 0) {
                   results.averages.all_scores.neutral += 1;
                 } else if (sentResult.score < 0) {
@@ -129,7 +139,7 @@ router.get("/twitter/:search", (req, res) => {
               const avgScore = sumScore / sentimentScores.length || 0;
               results.averages.average_score = avgScore;
 
-              // Store in cache
+              // Store in Redis cache
               redisClient.setex(searchParam, 3600, JSON.stringify(results));
 
               // Store in s3

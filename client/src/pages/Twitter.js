@@ -24,23 +24,13 @@ function Twitter() {
 
   useEffect(() => {
     if (loading === false) {
-      // if (data.data) {
-      //   // Get Keywords for all posts
-      //   let words = [];
-      //   for (let i = 0; i < data.data.posts.length; i++) {
-      //     for (
-      //       let j = 0;
-      //       j < data.data.posts[i].sentiment_data.words.length;
-      //       j++
-      //     ) {
-      //       words.push(data.data.posts[i].sentiment_data.words[j]);
-      //     }
-      //   }
-      //   setKeywords(words);
-      // }
-      
+      setKeywords(data.data?.averages.keywords)
     }
   }, [loading]);
+  
+  useEffect(() => {
+    console.log(keywords)
+  }, [keywords]);
 
   return (
     <div className="container my-5">
@@ -75,18 +65,17 @@ function Twitter() {
               </p>
 
               <div className="h-75 d-flex justify-content-center align-items-center">
-                <h3 className="text-muted">{data.data?.averages.average_score}</h3>
+                <h3 className="text-muted">{data.data?.averages.average_score.toFixed(3)}</h3>
               </div>
             </div>
             <div className="col-3 border py-3 text-center rounded data-summary">
               <p className="fw-bold p-0 m-0">Keywords</p>
-              {/* {loading === true ? (
+              {loading === true ? (
                 <ScaleLoader color="#0d6efd" />
               ) : (
                 <TagCloud
                   style={{
                     fontFamily: "sans-serif",
-                    fontSize: 30,
                     fontWeight: "bold",
                     fontStyle: "italic",
                     color: () => randomColor(),
@@ -99,7 +88,7 @@ function Twitter() {
                     return (
                       <div
                         style={{
-                          fontSize: Math.floor(Math.random() * 25) + 10,
+                          fontSize: Math.floor(Math.random() * 20) + 5,
                         }}
                         key={index}
                       >
@@ -108,7 +97,7 @@ function Twitter() {
                     );
                   })}
                 </TagCloud>
-              )} */}
+              )}
             </div>
           </div>
 
@@ -138,11 +127,11 @@ function Twitter() {
                     results:
                   </p>
 
-                  {data.data?.posts.map((post) => {
+                  {data.data?.posts.map((post, index) => {
                     return (
                       <div
                         className="border rounded my-4 p-3 d-flex"
-                        key={post.tweet_text}
+                        key={index}
                       >
                         <div className="d-flex align-items-center flex-column justify-content-center twitter-img-container">
                           <img
