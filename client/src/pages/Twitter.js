@@ -13,23 +13,27 @@ function Twitter() {
   const params = new URLSearchParams(useLocation().search);
   const coinName = params.get("coin");
 
-  // Get Reddit data
+  // Get Twitter data
   const { loading, data, error } = GetSentimentData("twitter", coinName);
 
-  // Testing
+  //Fetch data from server every 15 seconds minute (will change to 1 minute or so later)
+  // const interval = setInterval(async () => {
+  //     try {
+  //       // Check for new data after current data is loaded
+        
+  //         // console.log(data.data.posts[0].tweet_id)
 
+  //         // Get Twitter data
+  //         const { loading, data, error } = await GetSentimentData("twitter", coinName);
 
-    //Fetch data from server every 1 minute
-  const interval = setInterval(async () => {
-      try {
-          console.log("Testing testing testing")
-      } catch {
-          // setError('Unable to connect to the server. Please try again later')
-      }
-  }, 10000);
+  //     } catch {
+  //         // setError('Unable to connect to the server. Please try again later')
+  //     }
+  // }, 15000);
   
   return (
     <div className="container my-5">
+      
       {error === null ? (
         <>
           <div className="d-flex justify-content-between align-items-center">

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function GetSentimentData(route, query, limit) {
+export default function GetSentimentData(route, query, limit, lastTweetId = undefined) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [error, setError] = useState(null);
