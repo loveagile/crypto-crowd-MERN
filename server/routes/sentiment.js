@@ -60,7 +60,7 @@ router.get("/twitter/:search", (req, res) => {
       } else {
         // take the next_results querystring and recursively calls it
         let newQuerysting = data.search_metadata.next_results
-        return getAllTweets(newQuerysting, 2000);
+        return getAllTweets(newQuerysting, 500);
       }
     })
   }
@@ -81,7 +81,7 @@ router.get("/twitter/:search", (req, res) => {
             console.log("Serve from S3")
             return res.json(tweets);
           } else {
-            getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 2000).then(data => {
+            getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 500).then(data => {
               // Perform sentiment analysis
               let sentimentResults = [];
               data.forEach((post) => {
@@ -123,6 +123,7 @@ router.get("/twitter/:search", (req, res) => {
               for (let i = 0; i < data.length; i++) {
                 let dataObj = {};
                 dataObj["user"] = twitterResults[i].user;
+                dataObj["tweet_id"] = twitterResults[i].tweet_id;
                 dataObj["tweet_text"] = twitterResults[i].tweet_text;
                 dataObj["tweet_url"] = twitterResults[i].tweet_url;
                 dataObj["user_profile_img"] = twitterResults[i].user_profile_img;

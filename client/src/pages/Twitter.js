@@ -13,25 +13,21 @@ function Twitter() {
   const params = new URLSearchParams(useLocation().search);
   const coinName = params.get("coin");
 
-  // Array of 3 percentages for positive, negative, neutral
-  const [sentDistribution, setSentDistribution] = useState("");
-
-  // Keywords for tag cloud
-  const [keywords, setKeywords] = useState([]);
-
   // Get Reddit data
   const { loading, data, error } = GetSentimentData("twitter", coinName);
 
-  useEffect(() => {
-    if (loading === false) {
-      setKeywords(data.data?.averages.keywords)
-    }
-  }, [loading]);
-  
-  useEffect(() => {
-    console.log(keywords)
-  }, [keywords]);
+  // Testing
 
+
+    //Fetch data from server every 1 minute
+  const interval = setInterval(async () => {
+      try {
+          console.log("Testing testing testing")
+      } catch {
+          // setError('Unable to connect to the server. Please try again later')
+      }
+  }, 10000);
+  
   return (
     <div className="container my-5">
       {error === null ? (
@@ -84,7 +80,7 @@ function Twitter() {
                     height: "100%",
                   }}
                 >
-                  {keywords.map((word, index) => {
+                  {data.data?.averages.keywords.map((word, index) => {
                     return (
                       <div
                         style={{
