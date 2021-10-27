@@ -4,12 +4,13 @@ const https = require("https");
 const logger = require("morgan");
 const router = express.Router();
 const redis = require("redis")
+const moment = require("moment")
 var Sentiment = require("sentiment");
 var sentiment = new Sentiment();
 
-const TwitterHelper = require("../helpers/TwitterHelper");
+const { getSentimentResults, formatTwitterResults, getSentimentScores, findAverage, getKeywords, parseTwitterDate } = require('../helpers/SentimentAnalysisHelper')
+const Twitter = require("../helpers/TwitterHelper");
 const S3 = require("../helpers/AWSBucketHelper");
-
 const redisClient = redis.createClient();
 
 redisClient.on("error", (err) => {
@@ -25,144 +26,120 @@ router.use(logger("tiny"));
 router.get("/twitter/:search", (req, res) => {
   let searchParam = req.params.search;
 
-  let twitterResults = [];
+  function updatePersistance(key, data) {
+    // Store in Redis cache
+    redisClient.setex(key, 3600, JSON.stringify(data));
 
-  // Used for finding average senmtiment score
-  let sentimentScores = [];
-
-  // Final aggregated results from both APIs
-  let results = {
-    averages: {
-      average_score: 0,
-      all_scores: {
-        positive: 0,
-        negative: 0,
-        neutral: 0
-      },
-      keywords: []
-    },
-    posts: [],
-  };
-
-
-  function getAllTweets(queryString, limit) {
-    // Get tweets from helper function
-    return TwitterHelper.getTweets(queryString).then((data) => {
-      // add newly returned tweets into twitterResults
-      data.tweets.forEach((tweet) => {
-        twitterResults.push(tweet)
-      })
-
-      console.log(twitterResults.length)
-
-      if (twitterResults.length >= limit) {
-        return twitterResults;
-      } else {
-        // take the next_results querystring and recursively calls it
-        let newQuerysting = data.search_metadata.next_results
-        return getAllTweets(newQuerysting, 500);
-      }
+    // Store in s3
+    S3.uploadObject('cryptomate-bucket', `twitter-${key}`, JSON.stringify(data)).then((data) => {
+      console.log("Uploaded in: ", data.Bucket)
     })
+      .catch((error) => {
+        return res.json({ Error: true, Details: error.message });
+      })
   }
 
-  return redisClient.get(searchParam, (err, result) => {
+  // Check Redis
+  redisClient.get(searchParam, (err, result) => {
     if (result) {
       // Serve from cache if in Redis
-      const resultJSON = JSON.parse(result);
-      console.log("Serve from Redis")
-      return res.status(200).json(resultJSON);
+      let tweets = JSON.parse(result);
+
+      // Get most recent tweet
+      // Performance will get worse the larger the dataset
+      const mostRecentTweet = tweets.posts.reduce((a, b) => {
+        return new Date(parseTwitterDate(a.created_at)) > new Date(parseTwitterDate(b.created_at)) ? a : b;
+      });
+
+      // Check to see if there are any new tweets
+      Twitter.getAllSinceTweets(`q=${searchParam}&since_id=${mostRecentTweet.tweet_id}&count=100&result_type=most_recent`, new Array).then(result => {
+        if (result.length > 0) {
+
+          const newTweetSet = tweets.posts
+
+          result.forEach((post) => {
+            newTweetSet.push(post)
+          })
+
+          let sentimentResults = getSentimentResults(newTweetSet)
+          let sentimentScores = getSentimentScores(sentimentResults)
+          let averageScore = findAverage(sentimentScores)
+          let keywords = getKeywords(sentimentResults)
+          let newResults = formatTwitterResults(sentimentResults, newTweetSet, averageScore, keywords)
+
+          updatePersistance(searchParam, newResults);
+
+          return res.json(newResults);
+        } else {
+          return res.json(tweets);
+        }
+      }).catch((error) => {
+        console.log(error.message)
+        return res.json({ Error: true, Details: error.message });
+      });
     } else {
-      // Serve from S3
-      S3.getObject('cryptomate-bucket', `twitter-${searchParam}`)
-        .then((data) => {
-          if (data) {
-            const tweets = JSON.parse(data.Body)
-            redisClient.setex(searchParam, 3600, JSON.stringify(tweets));
-            console.log("Serve from S3")
+      // Check S3
+      S3.getObject('cryptomate-bucket', `twitter-${searchParam}`).then((data) => {
+        if (data) {
+          let tweets = JSON.parse(data.Body)
+
+          // Get most recent tweet
+          // Performance will get worse the larger the dataset
+          const mostRecentTweet = tweets.posts.reduce((a, b) => {
+            return new Date(parseTwitterDate(a.created_at)) > new Date(parseTwitterDate(b.created_at)) ? a : b;
+          });
+
+          // // Check to see if there are any new tweets
+          Twitter.getAllSinceTweets(`q=${searchParam}&since_id=${mostRecentTweet.tweet_id}&count=100&result_type=most_recent&include_entities=1`, new Array).then(result => {
+            if (result.length > 0) {
+
+              const newTweetSet = tweets.posts
+
+              result.forEach((post) => {
+                newTweetSet.push(post)
+              })
+
+              let sentimentResults = getSentimentResults(newTweetSet)
+              let sentimentScores = getSentimentScores(sentimentResults)
+              let averageScore = findAverage(sentimentScores)
+              let keywords = getKeywords(sentimentResults)
+              let newResults = formatTwitterResults(sentimentResults, newTweetSet, averageScore, keywords)
+
+              updatePersistance(searchParam, newResults);
+
+              return res.json(newResults);
+            } else {
+              redisClient.setex(searchParam, 3600, JSON.stringify(tweets));
+              return res.json(tweets);
+            }
+          }).catch((error) => {
+            console.log(error.message)
+            return res.json({ Error: true, Details: error.message });
+          });
+        } else {
+          // Get tweets from twitter API
+          Twitter.getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=most_recent`, new Array, 100).then(data => {
+
+            let sentimentResults = getSentimentResults(data)
+            let sentimentScores = getSentimentScores(sentimentResults)
+            let averageScore = findAverage(sentimentScores)
+            let keywords = getKeywords(sentimentResults)
+            let tweets = formatTwitterResults(sentimentResults, data, averageScore, keywords)
+
+            updatePersistance(searchParam, tweets);
+
             return res.json(tweets);
-          } else {
-            getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=mixed`, 500).then(data => {
-              // Perform sentiment analysis
-              let sentimentResults = [];
-              data.forEach((post) => {
-                // Removes @ mentions in the tweets
-                function cleanData (data) {
-                  regex = /(@\w*)|((?:https?):\/\/[\n\S]+)|RT/g
-                  let newstring = data.replace(regex, '')
-                  return newstring
-                }
+          }).catch((error) => {
+            return res.json({ Error: true, Details: error.message });
+          })
 
-                let cleanTweet = cleanData(post.tweet_text)
-
-                // Perform sentiment analysis
-                var sentResult = sentiment.analyze(cleanTweet);
-
-                // Store all keywords (positive & negative)
-                sentResult.words.forEach(word => {
-                  // Check if word is already in array
-                  if (!results.averages.keywords.includes(word)) {
-                    results.averages.keywords.push(word);
-                  }
-                })
-
-                sentimentResults.push(sentResult);
-                
-                // Record tally for positive, negative, neutral result (for pie chart)
-                if (sentResult.score === 0) {
-                  results.averages.all_scores.neutral += 1;
-                } else if (sentResult.score < 0) {
-                  results.averages.all_scores.negative += 1;
-                } else if (sentResult.score > 0) {
-                  results.averages.all_scores.positive += 1;
-                }
-              });
-              return sentimentResults;
-            }).then((data) => {
-              // Format twitter data and sentiment data together
-
-              for (let i = 0; i < data.length; i++) {
-                let dataObj = {};
-                dataObj["user"] = twitterResults[i].user;
-                dataObj["tweet_id"] = twitterResults[i].tweet_id;
-                dataObj["tweet_text"] = twitterResults[i].tweet_text;
-                dataObj["tweet_url"] = twitterResults[i].tweet_url;
-                dataObj["user_profile_img"] = twitterResults[i].user_profile_img;
-                dataObj["created_at"] = twitterResults[i].created_at;
-                dataObj["sentiment_data"] = data[i];
-
-                // Store score so we can perform and average later
-                sentimentScores.push(data[i].score)
-                results.posts.push(dataObj);
-              }
-
-              // Get average score
-              const sumScore = sentimentScores.reduce((a, b) => a + b, 0);
-              const avgScore = sumScore / sentimentScores.length || 0;
-              results.averages.average_score = avgScore;
-
-              // Store in Redis cache
-              redisClient.setex(searchParam, 3600, JSON.stringify(results));
-
-              // Store in s3
-              S3.uploadObject('cryptomate-bucket', `twitter-${searchParam}`, JSON.stringify(results)).then((data) => {
-                console.log("Uploaded in: ", data.Bucket)
-              })
-              .catch((error) => {
-                return res.json({ Error: true, Details: error.message });
-              })
-
-              return res.json(results);
-            }).catch((error) => {
-              return res.json({ Error: true, Details: error });
-            });
-          }
-        })
-        .catch((error) => {
-          return res.json({ Error: true, Details: error.message });
-        })
+        }
+      }).catch((error) => {
+        res.json({ Error: true, Details: error.message });
+      })
     }
-  });
-});
+  })
+})
 
 
 
