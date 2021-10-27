@@ -7,7 +7,7 @@ const redis = require("redis")
 var Sentiment = require("sentiment");
 var sentiment = new Sentiment();
 
-const { getSentimentResults, formatTwitterResults, getSentimentScores, findAverage, getKeywords, parseTwitterDate } = require('../helpers/SentimentAnalysisHelper')
+const { parseTwitterDate, analyseAndFormat } = require('../helpers/SentimentAnalysisHelper')
 const Twitter = require("../helpers/TwitterHelper");
 const S3 = require("../helpers/AWSBucketHelper");
 const redisClient = redis.createClient();
@@ -53,22 +53,14 @@ router.get("/twitter/:search", (req, res) => {
       // Check to see if there are any new tweets
       Twitter.getAllSinceTweets(`q=${searchParam}&since_id=${mostRecentTweet.tweet_id}&count=100&result_type=most_recent`, new Array).then(result => {
         if (result.length > 0) {
-
           const newTweetSet = tweets.posts
-
           result.forEach((post) => {
             newTweetSet.push(post)
           })
-
-          let sentimentResults = getSentimentResults(newTweetSet)
-          let sentimentScores = getSentimentScores(sentimentResults)
-          let averageScore = findAverage(sentimentScores)
-          let keywords = getKeywords(sentimentResults)
-          let newResults = formatTwitterResults(sentimentResults, newTweetSet, averageScore, keywords)
-
+          // Re-run sentiment analysis on datastore with newly retrieved data
+          const newResults = analyseAndFormat(newTweetSet);
           // Update Redis cache
           redisClient.setex(searchParam, 3600, JSON.stringify(newResults));
-
           return res.json(newResults);
         } else {
           return res.json(tweets);
@@ -92,21 +84,13 @@ router.get("/twitter/:search", (req, res) => {
           // // Check to see if there are any new tweets
           Twitter.getAllSinceTweets(`q=${searchParam}&since_id=${mostRecentTweet.tweet_id}&count=100&result_type=most_recent&include_entities=1`, new Array).then(result => {
             if (result.length > 0) {
-
               const newTweetSet = tweets.posts
-
               result.forEach((post) => {
                 newTweetSet.push(post)
               })
-
-              let sentimentResults = getSentimentResults(newTweetSet)
-              let sentimentScores = getSentimentScores(sentimentResults)
-              let averageScore = findAverage(sentimentScores)
-              let keywords = getKeywords(sentimentResults)
-              let newResults = formatTwitterResults(sentimentResults, newTweetSet, averageScore, keywords)
-
+              // Re-run sentiment analysis on datastore with newly retrieved data
+              const newResults = analyseAndFormat(newTweetSet);
               updatePersistance(searchParam, newResults);
-
               return res.json(newResults);
             } else {
               redisClient.setex(searchParam, 3600, JSON.stringify(tweets));
@@ -119,15 +103,8 @@ router.get("/twitter/:search", (req, res) => {
         } else {
           // Get tweets from twitter API
           Twitter.getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=most_recent`, new Array, 100).then(data => {
-
-            let sentimentResults = getSentimentResults(data)
-            let sentimentScores = getSentimentScores(sentimentResults)
-            let averageScore = findAverage(sentimentScores)
-            let keywords = getKeywords(sentimentResults)
-            let tweets = formatTwitterResults(sentimentResults, data, averageScore, keywords)
-
+            const tweets = analyseAndFormat(data);
             updatePersistance(searchParam, tweets);
-
             return res.json(tweets);
           }).catch((error) => {
             return res.json({ Error: true, Details: error.message });

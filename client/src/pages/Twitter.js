@@ -7,6 +7,7 @@ import TagCloud from "react-tag-cloud";
 import randomColor from "randomcolor";
 import PieChart from "../components/PieChart";
 
+
 function Twitter() {
   const history = useHistory();
   const location = useLocation();
@@ -30,7 +31,8 @@ function Twitter() {
   //         // setError('Unable to connect to the server. Please try again later')
   //     }
   // }, 15000);
-  
+
+
   return (
     <div className="container my-5">
       
