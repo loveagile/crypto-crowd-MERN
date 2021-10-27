@@ -4,7 +4,6 @@ const https = require("https");
 const logger = require("morgan");
 const router = express.Router();
 const redis = require("redis")
-const moment = require("moment")
 var Sentiment = require("sentiment");
 var sentiment = new Sentiment();
 
