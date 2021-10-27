@@ -6,6 +6,7 @@ import { ScaleLoader } from "react-spinners";
 import TagCloud from "react-tag-cloud";
 import randomColor from "randomcolor";
 import PieChart from "../components/PieChart";
+import Moment from 'react-moment';
 
 
 function Twitter() {
@@ -17,21 +18,9 @@ function Twitter() {
   // Get Twitter data
   const { loading, data, error } = GetSentimentData("twitter", coinName);
 
-  //Fetch data from server every 15 seconds minute (will change to 1 minute or so later)
-  // const interval = setInterval(async () => {
-  //     try {
-  //       // Check for new data after current data is loaded
-        
-  //         // console.log(data.data.posts[0].tweet_id)
-
-  //         // Get Twitter data
-  //         const { loading, data, error } = await GetSentimentData("twitter", coinName);
-
-  //     } catch {
-  //         // setError('Unable to connect to the server. Please try again later')
-  //     }
-  // }, 15000);
-
+  if (!loading) {
+    data.data?.posts.sort((a, b) => new Date(Date.parse(a.created_at.replace(/( \+)/, ' UTC$1'))) < new Date(Date.parse(b.created_at.replace(/( \+)/, ' UTC$1'))) ? 1 : -1);
+  }
 
   return (
     <div className="container my-5">
@@ -158,7 +147,9 @@ function Twitter() {
                           <p className="text-capitalize my-2">
                             <b>Posted:</b>{" "}
                             <span className="mx-1">
-                              {post.created_at}
+                               <Moment fromNow ago>
+                                  { new Date(Date.parse(post.created_at.replace(/( \+)/, ' UTC$1')))}
+                              </Moment>
                             </span>
                           </p>
 
