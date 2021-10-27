@@ -31,7 +31,6 @@ module.exports = {
    */
   getTweets: function (queryString) {
     return new Promise((resolve, reject) => {
-
       // turn querystring into an object
       const urlParams = new URLSearchParams(queryString);
       const ent = urlParams.entries()
@@ -58,13 +57,10 @@ module.exports = {
   getAllTweets: function (queryString, newResults, limit) {
     // Get tweets from helper function
     return this.getTweets(queryString).then((data) => {
-      // add newly returned tweets into twitterResults
+      // add newly returned tweets into newResults
       data.tweets.forEach((tweet) => {
         newResults.push(tweet)
       })
-
-      console.log(newResults.length)
-
       if (newResults.length >= limit) {
         return newResults;
       } else {
@@ -83,13 +79,10 @@ module.exports = {
   getAllSinceTweets: function(queryString, newResults) {
     // Get tweets from helper function
     return this.getTweets(queryString).then((data) => {
-
+      // add newly returned tweets into newResults
       data.tweets.forEach((tweet) => {
         newResults.push(tweet)
       })
-
-      console.log(newResults.length)
-
       if (data.tweets.length == 0) {
         // No more new tweets
         return newResults;

@@ -13,14 +13,10 @@ function getSentimentResults(data) {
     data.forEach((post) => {
         // Removes @ mentions in the tweets
         let cleanTweet = cleanData(post.tweet_text)
-
         // Perform sentiment analysis
         var sentResult = sentiment.analyze(cleanTweet);
-
         sentimentResults.push(sentResult);
-
     });
-
     return sentimentResults;
 }
 
@@ -38,8 +34,15 @@ function getAllScores(data) {
     return data
 }
 
-function formatTwitterResults(sentiemntResults, twitterResults, averageScore, keywords) {
-
+/**
+ * Formats the sentiment analysis
+ * @param  {Array<Object>} sentimentResults 
+ * @param  {Array<Object>} twitterResults 
+ * @param  {Integer} averageScore 
+ * @param  {Array<String>} keywords 
+ * @returns {Object} Formatted sentiment results
+ */
+function formatTwitterResults(sentimentResults, twitterResults, averageScore, keywords) {
     let tweets = {
         averages: {
             average_score: 0,
@@ -53,7 +56,7 @@ function formatTwitterResults(sentiemntResults, twitterResults, averageScore, ke
         posts: [],
     };
 
-    for (let i = 0; i < sentiemntResults.length; i++) {
+    for (let i = 0; i < sentimentResults.length; i++) {
         let dataObj = {};
         dataObj["user"] = twitterResults[i].user;
         dataObj["tweet_id"] = twitterResults[i].tweet_id;
@@ -61,13 +64,13 @@ function formatTwitterResults(sentiemntResults, twitterResults, averageScore, ke
         dataObj["tweet_url"] = twitterResults[i].tweet_url;
         dataObj["user_profile_img"] = twitterResults[i].user_profile_img;
         dataObj["created_at"] = twitterResults[i].created_at;
-        dataObj["sentiment_data"] = sentiemntResults[i];
+        dataObj["sentiment_data"] = sentimentResults[i];
 
-        if (sentiemntResults[i].score === 0) {
+        if (sentimentResults[i].score === 0) {
             tweets.averages.all_scores.neutral += 1;
-        } else if (sentiemntResults[i].score < 0) {
+        } else if (sentimentResults[i].score < 0) {
             tweets.averages.all_scores.negative += 1;
-        } else if (sentiemntResults[i].score > 0) {
+        } else if (sentimentResults[i].score > 0) {
             tweets.averages.all_scores.positive += 1;
         }
 
@@ -76,8 +79,6 @@ function formatTwitterResults(sentiemntResults, twitterResults, averageScore, ke
 
     tweets.averages.average_score = averageScore
     tweets.averages.keywords = keywords
-
-
     return tweets;
 }
 
@@ -86,12 +87,22 @@ function getSentimentScores(ObjArray) {
     return scores
 }
 
+/**
+ * Finds average
+ * @param  {Array<Integer>} wordArray 
+ * @returns {Integer} Average score
+ */
 function findAverage(scores) {
     const sumScore = scores.reduce((a, b) => a + b, 0);
     const avgScore = sumScore / scores.length || 0;
     return avgScore;
 }
 
+/**
+ * Gets unique keywords
+ * @param  {Array<String>} wordArray 
+ * @returns {Array<String>} Keywords
+ */
 function getKeywords(wordArray) {
     let keywords = []
     wordArray.forEach(item => {
@@ -105,11 +116,20 @@ function getKeywords(wordArray) {
     return keywords;
 }
 
+/**
+ * Returns a new date from string ("Wed Oct 27 10:53:05 +0000 2021")
+ * @param  {String} aDate 
+ */
 function parseTwitterDate(aDate) {
     return new Date(Date.parse(aDate.replace(/( \+)/, ' UTC$1')));
     //sample: Wed Mar 13 09:06:07 +0000 2013 
 }
 
+/**
+ * Performs a sentiment analysis
+ * @param  {Array<Object>} dataToAnalyse 
+ * @returns {Object} Sentiment analysis results
+ */
 function analyseAndFormat(dataToAnalyse) {
     let sentimentResults = getSentimentResults(dataToAnalyse)
     let sentimentScores = getSentimentScores(sentimentResults)
