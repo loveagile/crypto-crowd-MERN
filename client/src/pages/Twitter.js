@@ -147,7 +147,7 @@ function Twitter() {
                           <p className="text-capitalize my-2">
                             <b>Posted:</b>{" "}
                             <span className="mx-1">
-                               <Moment fromNow ago>
+                               <Moment fromNow>
                                   { new Date(Date.parse(post.created_at.replace(/( \+)/, ' UTC$1')))}
                               </Moment>
                             </span>
