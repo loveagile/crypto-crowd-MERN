@@ -66,7 +66,8 @@ router.get("/twitter/:search", (req, res) => {
           let keywords = getKeywords(sentimentResults)
           let newResults = formatTwitterResults(sentimentResults, newTweetSet, averageScore, keywords)
 
-          updatePersistance(searchParam, newResults);
+          // Update Redis cache
+          redisClient.setex(key, 3600, JSON.stringify(newResults));
 
           return res.json(newResults);
         } else {
