@@ -28,7 +28,7 @@ export default function GetSentimentData(route, query, limit, lastTweetId = unde
 }
 
 function getRedditData(query, limit) {
-  return axios(`http://127.0.0.1:3001/sentiment/twitter/${query}`).then(
+  return axios(`http://${window.location.hostname}:3001/sentiment/twitter/${query}`).then(
     (response) => response
   );
 }
