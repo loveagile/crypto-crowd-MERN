@@ -3,10 +3,11 @@ const logger = require("morgan");
 const router = express.Router();
 const redis = require("redis")
 
-const { parseTwitterDate, sentimentAnlysis } = require('../helpers/SentimentAnalysisHelper')
+const { parseTwitterDate, sentimentAnalysis } = require('../helpers/SentimentAnalysisHelper')
 const Twitter = require("../helpers/TwitterHelper");
 const S3 = require("../helpers/AWSBucketHelper");
-const redisClient = redis.createClient();
+const redisClient = redis.createClient({url:"cryptomate-elasticache-redis.km2jzi.0001.apse2.cache.amazonaws.com", port: 6379});
+const AWS = require('aws-sdk');
 
 redisClient.on("error", (err) => {
   console.log("Error " + err);
@@ -54,9 +55,10 @@ router.get("/twitter/:search", (req, res) => {
             newTweetSet.push(post)
           })
           // Re-run sentiment analysis on datastore with newly retrieved data
-          const newResults = analyseAndFsentimentAnlysisormat(newTweetSet);
+          const newResults = sentimentAnalysis(newTweetSet);
           // Update Redis cache
-          redisClient.setex(searchParam, 3600, JSON.stringify(newResults));
+          // redisClient.setex(searchParam, 3600, JSON.stringify(newResults));
+
           return res.json(newResults);
         } else {
           return res.json(tweets);
@@ -85,7 +87,8 @@ router.get("/twitter/:search", (req, res) => {
                 newTweetSet.push(post)
               })
               // Re-run sentiment analysis on datastore with newly retrieved data
-              const newResults = sentimentAnlysis(newTweetSet);
+              const newResults = sentimentAnalysis(newTweetSet);
+
               updatePersistance(searchParam, newResults);
               return res.json(newResults);
             } else {
@@ -99,7 +102,7 @@ router.get("/twitter/:search", (req, res) => {
         } else {
           // Get tweets from twitter API
           Twitter.getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=most_recent`, new Array, 100).then(data => {
-            const tweets = sentimentAnlysis(data);
+            const tweets = sentimentAnalysis(data);
             updatePersistance(searchParam, tweets);
             return res.json(tweets);
           }).catch((error) => {
