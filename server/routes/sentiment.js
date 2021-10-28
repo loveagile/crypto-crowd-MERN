@@ -57,7 +57,7 @@ router.get("/twitter/:search", (req, res) => {
           // Re-run sentiment analysis on datastore with newly retrieved data
           const newResults = sentimentAnalysis(newTweetSet);
           // Update Redis cache
-          // redisClient.setex(searchParam, 3600, JSON.stringify(newResults));
+          redisClient.setex(searchParam, 3600, JSON.stringify(newResults));
 
           return res.json(newResults);
         } else {
