@@ -12,7 +12,7 @@ var client = new Twitter({
 });
 
 function userDetails(tweet) {
-  return { tweet_id: tweet.id, tweet_text: tweet.text, tweet_url: tweet.entities.urls[0]?.url, user: tweet.user.screen_name, user_profile_img: tweet.user.profile_image_url_https, created_at: tweet.created_at }
+  return { tweet_id: tweet.id, tweet_text: tweet.text, tweet_url: tweet.entities.urls, user: tweet.user.screen_name, user_profile_img: tweet.user.profile_image_url_https, created_at: tweet.created_at }
 }
 
 // create and object from a query string
