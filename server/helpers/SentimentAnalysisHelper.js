@@ -130,7 +130,7 @@ function parseTwitterDate(aDate) {
  * @param  {Array<Object>} dataToAnalyse 
  * @returns {Object} Sentiment analysis results
  */
-function analyseAndFormat(dataToAnalyse) {
+function sentimentAnlysis(dataToAnalyse) {
     let sentimentResults = getSentimentResults(dataToAnalyse)
     let sentimentScores = getSentimentScores(sentimentResults)
     let averageScore = findAverage(sentimentScores)
@@ -147,5 +147,5 @@ module.exports = {
     findAverage:findAverage,
     getKeywords: getKeywords,
     parseTwitterDate: parseTwitterDate,
-    analyseAndFormat: analyseAndFormat
+    sentimentAnlysis: sentimentAnlysis
 }
