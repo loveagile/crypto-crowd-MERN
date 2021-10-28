@@ -83,8 +83,11 @@ module.exports = {
       data.tweets.forEach((tweet) => {
         newResults.push(tweet)
       })
-      if (data.tweets.length == 0) {
-        // No more new tweets
+      // twitter only allows max 100 tweets at a time
+      // if less than 100 there is no more tweets @ current time, so just return
+      // if greater > 100 - function will call again
+      // more efficient than data.tweets.length == 0
+      if (data.tweets.length < 99) {
         return newResults;
       } else {
         // take the refresh_url querystring and recursively calls it
