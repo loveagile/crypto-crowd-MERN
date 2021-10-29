@@ -9,23 +9,11 @@ const S3 = require("../helpers/AWSBucketHelper");
 const redisClient = redis.createClient({host:"cryptomate-elasticache-redis.km2jzi.0001.apse2.cache.amazonaws.com", port: 6379});
 const AWS = require('aws-sdk');
 
-const SESConfig = {
-  apiVersion: "2010-12-01",
-  accessKeyId: process.env.aws_access_key_id,
-  accessSecretKey: process.env.aws_secret_access_key,
-  region: "ap-southeast-2"
-}
-AWS.config.update(SESConfig);
-
 redisClient.on("error", (err) => {
   console.log("Error " + err);
 });
 
 router.use(logger("tiny"));
-
-// TODO: Implement sentiment analysis on Reddit and News post titles
-// At the moment I have installed the 'sentiment' Node.js but we could
-// change this to something else if there is a better package
 
 router.get("/twitter/:search", (req, res) => {
   let searchParam = req.params.search;
