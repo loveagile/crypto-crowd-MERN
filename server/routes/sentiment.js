@@ -6,8 +6,16 @@ const redis = require("redis")
 const { parseTwitterDate, sentimentAnalysis } = require('../helpers/SentimentAnalysisHelper')
 const Twitter = require("../helpers/TwitterHelper");
 const S3 = require("../helpers/AWSBucketHelper");
-const redisClient = redis.createClient({host:"cryptomate-elasticache-redis.km2jzi.0001.apse2.cache.amazonaws.com", port: 6379});
+const redisClient = redis.createClient();
 const AWS = require('aws-sdk');
+
+const SESConfig = {
+  apiVersion: "2010-12-01",
+  accessKeyId: process.env.aws_access_key_id,
+  accessSecretKey: process.env.aws_secret_access_key,
+  region: "ap-southeast-2"
+}
+AWS.config.update(SESConfig);
 
 redisClient.on("error", (err) => {
   console.log("Error " + err);
