@@ -21,17 +21,18 @@ function getSentimentResults(data) {
 }
 
 function getAllScores(data) {
-    data.forEach((post) => {
+    const scores = { neutral: 0, negative: 0, positive: 0 }
+    data.forEach((score) => {
         // Record tally for positive, negative, neutral result (for pie chart)
-        if (sentResult.score === 0) {
-            results.averages.all_scores.neutral += 1;
-        } else if (sentResult.score < 0) {
-            results.averages.all_scores.negative += 1;
-        } else if (sentResult.score > 0) {
-            results.averages.all_scores.positive += 1;
+        if (score === 0) {
+            scores.neutral += 1;
+        } else if (score < 0) {
+            scores.negative += 1;
+        } else if (score > 0) {
+            scores.positive += 1;
         }
     });
-    return data
+    return scores
 }
 
 /**
@@ -103,15 +104,15 @@ function findAverage(scores) {
  * @param  {Array<String>} wordArray 
  * @returns {Array<String>} Keywords
  */
-function getKeywords(wordArray) {
-    let keywords = []
-    wordArray.forEach(item => {
-        // Check if word is already in array
+function getKeywords(newWords, oldWords) {
+    let keywords = oldWords
+    newWords.forEach(item => {
         item.words.forEach((word) => {
             if (!keywords.includes(word)) {
                 keywords.push(word);
             }
         })
+
     })
     return keywords;
 }
@@ -134,9 +135,42 @@ function sentimentAnalysis(dataToAnalyse) {
     let sentimentResults = getSentimentResults(dataToAnalyse)
     let sentimentScores = getSentimentScores(sentimentResults)
     let averageScore = findAverage(sentimentScores)
-    let keywords = getKeywords(sentimentResults)
+    let keywords = getKeywords(sentimentResults, new Array)
     let newResults = formatTwitterResults(sentimentResults, dataToAnalyse, averageScore, keywords)
     return newResults;
+}
+
+function sentimentReAnalyse(newResults, oldResults) {
+    let sentimentResults = getSentimentResults(newResults)
+    let sentimentScores = getSentimentScores(sentimentResults)
+    let averageScore = findAverage(sentimentScores)
+    let keywords = getKeywords(sentimentResults, oldResults.averages.keywords)
+
+    // find combined mean average from new and old results
+    oldResults.averages.average_score = ((oldResults.posts.length * oldResults.averages.average_score) + (sentimentScores.length * averageScore)) / (oldResults.posts.length + sentimentScores.length)
+    oldResults.averages.keywords = keywords
+
+    for (let i = 0; i < sentimentResults.length; i++) {
+        let dataObj = {};
+        dataObj["user"] = newResults[i].user;
+        dataObj["tweet_id"] = newResults[i].tweet_id;
+        dataObj["tweet_text"] = newResults[i].tweet_text;
+        dataObj["tweet_url"] = newResults[i].tweet_url;
+        dataObj["user_profile_img"] = newResults[i].user_profile_img;
+        dataObj["created_at"] = newResults[i].created_at;
+        dataObj["sentiment_data"] = sentimentResults[i];
+
+        if (sentimentResults[i].score === 0) {
+            oldResults.averages.all_scores.neutral += 1;
+        } else if (sentimentResults[i].score < 0) {
+            oldResults.averages.all_scores.negative += 1;
+        } else if (sentimentResults[i].score > 0) {
+            oldResults.averages.all_scores.positive += 1;
+        }
+
+        oldResults.posts.push(dataObj);
+    }
+    return oldResults;
 }
 
 module.exports = {
@@ -144,8 +178,9 @@ module.exports = {
     getAllScores: getAllScores,
     formatTwitterResults: formatTwitterResults,
     getSentimentScores: getSentimentScores,
-    findAverage:findAverage,
+    findAverage: findAverage,
     getKeywords: getKeywords,
     parseTwitterDate: parseTwitterDate,
-    sentimentAnalysis: sentimentAnalysis
+    sentimentAnalysis: sentimentAnalysis,
+    sentimentReAnalyse: sentimentReAnalyse
 }

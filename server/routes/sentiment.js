@@ -2,8 +2,9 @@ const express = require("express");
 const logger = require("morgan");
 const router = express.Router();
 const redis = require("redis")
+const { performance } = require('perf_hooks')
 
-const { parseTwitterDate, sentimentAnalysis } = require('../helpers/SentimentAnalysisHelper')
+const { parseTwitterDate, sentimentAnalysis, sentimentReAnalyse } = require('../helpers/SentimentAnalysisHelper')
 const Twitter = require("../helpers/TwitterHelper");
 const S3 = require("../helpers/AWSBucketHelper");
 const redisClient = redis.createClient({host:"cryptomate-elasticache-redis.km2jzi.0001.apse2.cache.amazonaws.com", port: 6379});
@@ -50,15 +51,10 @@ router.get("/twitter/:search", (req, res) => {
       // Check to see if there are any new tweets
       Twitter.getAllSinceTweets(`q=${searchParam}&since_id=${mostRecentTweet.tweet_id}&count=100&result_type=most_recent`, new Array).then(result => {
         if (result.length > 0) {
-          const newTweetSet = tweets.posts
-          result.forEach((post) => {
-            newTweetSet.push(post)
-          })
           // Re-run sentiment analysis on datastore with newly retrieved data
-          const newResults = sentimentAnalysis(newTweetSet);
+          const newResults = sentimentReAnalyse(result, tweets);
           // Update Redis cache
           redisClient.setex(searchParam, 3600, JSON.stringify(newResults));
-
           return res.json(newResults);
         } else {
           return res.json(tweets);
@@ -82,13 +78,8 @@ router.get("/twitter/:search", (req, res) => {
           // // Check to see if there are any new tweets
           Twitter.getAllSinceTweets(`q=${searchParam}&since_id=${mostRecentTweet.tweet_id}&count=100&result_type=most_recent&include_entities=1`, new Array).then(result => {
             if (result.length > 0) {
-              const newTweetSet = tweets.posts
-              result.forEach((post) => {
-                newTweetSet.push(post)
-              })
               // Re-run sentiment analysis on datastore with newly retrieved data
-              const newResults = sentimentAnalysis(newTweetSet);
-
+              const newResults = sentimentReAnalyse(result, tweets);
               updatePersistance(searchParam, newResults);
               return res.json(newResults);
             } else {
