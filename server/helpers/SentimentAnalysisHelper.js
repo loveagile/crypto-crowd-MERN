@@ -1,12 +1,22 @@
 var Sentiment = require("sentiment");
 var sentiment = new Sentiment();
 
+/**
+ * Removes @ symbol from tweet text
+ * @param  {String} data 
+ * @returns {String} String with '@' removed
+ */
 function cleanData(data) {
     regex = /(@\w*)|((?:https?):\/\/[\n\S]+)|RT/g
     let newstring = data.replace(regex, '')
     return newstring
 }
 
+/**
+ * Gets sentiments results
+ * @param  {Array<Object>} data Data to be analysed 
+ * @returns {Array<Object>} Sentiment results
+ */
 function getSentimentResults(data) {
     let sentimentResults = [];
 
@@ -18,21 +28,6 @@ function getSentimentResults(data) {
         sentimentResults.push(sentResult);
     });
     return sentimentResults;
-}
-
-function getAllScores(data) {
-    const scores = { neutral: 0, negative: 0, positive: 0 }
-    data.forEach((score) => {
-        // Record tally for positive, negative, neutral result (for pie chart)
-        if (score === 0) {
-            scores.neutral += 1;
-        } else if (score < 0) {
-            scores.negative += 1;
-        } else if (score > 0) {
-            scores.positive += 1;
-        }
-    });
-    return scores
 }
 
 /**
@@ -83,8 +78,13 @@ function formatTwitterResults(sentimentResults, twitterResults, averageScore, ke
     return tweets;
 }
 
-function getSentimentScores(ObjArray) {
-    let scores = ObjArray.map(obj => obj.score)
+/**
+ * Get the scores for all sentiment objects
+ * @param  {Array<Object>} sentiments Sentiment data
+ * @returns {Array} Sentiment scores
+ */
+function getSentimentScores(sentiments) {
+    let scores = sentiments.map(sentiment => sentiment.score)
     return scores
 }
 
@@ -140,6 +140,13 @@ function sentimentAnalysis(dataToAnalyse) {
     return newResults;
 }
 
+/**
+ * Performs a sentiment re-analysis
+ * Takes new results and appends them the already existing results
+ * @param  {Array<Object>} newResults New data to be analysed
+ * @param  {Array<Object>} oldResults Existing data
+ * @returns {Object} Sentiment analysis results
+ */
 function sentimentReAnalyse(newResults, oldResults) {
     let sentimentResults = getSentimentResults(newResults)
     let sentimentScores = getSentimentScores(sentimentResults)
@@ -175,7 +182,6 @@ function sentimentReAnalyse(newResults, oldResults) {
 
 module.exports = {
     getSentimentResults: getSentimentResults,
-    getAllScores: getAllScores,
     formatTwitterResults: formatTwitterResults,
     getSentimentScores: getSentimentScores,
     findAverage: findAverage,
