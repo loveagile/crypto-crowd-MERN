@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function GetSentimentData(route, query, limit, lastTweetId = undefined) {
+export default function GetSentimentData(route, query) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (route === "twitter") {
-      getRedditData(query, limit)
+      getTwitterData(query)
         .then((data) => {
           setData(data);
           setLoading(false);
@@ -27,8 +27,8 @@ export default function GetSentimentData(route, query, limit, lastTweetId = unde
   };
 }
 
-function getRedditData(query, limit) {
-  return axios(`http://${window.location.hostname}:3001/sentiment/twitter/${query}`).then(
+function getTwitterData(query) {
+  return axios(`/sentiment/twitter/${query}`).then(
     (response) => response
   );
 }

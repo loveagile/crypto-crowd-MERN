@@ -8,6 +8,10 @@ const { parseTwitterDate, sentimentAnalysis, sentimentReAnalyse } = require('../
 const Twitter = require("../helpers/TwitterHelper");
 const S3 = require("../helpers/AWSBucketHelper");
 const redisClient = redis.createClient({host:"cryptomate-elasticache-redis.km2jzi.0001.apse2.cache.amazonaws.com", port: 6379});
+
+// For running on with Redis on local machine
+// const redisClient = redis.createClient();
+
 const AWS = require('aws-sdk');
 
 redisClient.on("error", (err) => {
@@ -15,10 +19,6 @@ redisClient.on("error", (err) => {
 });
 
 router.use(logger("tiny"));
-
-// TODO: Implement sentiment analysis on Reddit and News post titles
-// At the moment I have installed the 'sentiment' Node.js but we could
-// change this to something else if there is a better package
 
 router.get("/twitter/:search", (req, res) => {
   let searchParam = req.params.search;
