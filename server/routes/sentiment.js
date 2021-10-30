@@ -6,7 +6,11 @@ const redis = require("redis")
 const { parseTwitterDate, sentimentAnalysis } = require('../helpers/SentimentAnalysisHelper')
 const Twitter = require("../helpers/TwitterHelper");
 const S3 = require("../helpers/AWSBucketHelper");
-const redisClient = redis.createClient({host:"cryptomate-elasticache-redis.km2jzi.0001.apse2.cache.amazonaws.com", port: 6379});
+//const redisClient = redis.createClient({host:"cryptomate-elasticache-redis.km2jzi.0001.apse2.cache.amazonaws.com", port: 6379});
+
+// For running on with Redis on local machine
+const redisClient = redis.createClient();
+
 const AWS = require('aws-sdk');
 
 redisClient.on("error", (err) => {

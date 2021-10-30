@@ -25,14 +25,14 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(cors());
 
 // Serve out any static assets correctly
-// app.use(express.static("../client/build"));
+app.use(express.static("../client/build"));
 
 app.use("/", indexRouter);
 app.use("/sentiment", sentimentRouter);
 
-// app.use((req, res) => {
-//   res.sendFile(path.join(__dirname, "../client/build", "index.html"));
-// });
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, "../client/build", "index.html"));
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
