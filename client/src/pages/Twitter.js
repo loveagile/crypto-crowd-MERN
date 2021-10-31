@@ -19,120 +19,6 @@ function Twitter() {
   // Get Twitter data
   const { loading, data, error } = GetSentimentData("twitter", coinName);
   
-  // Pagination
-  const [pageNumber, setPageNumber] = useState(0);  
-
-  const postsPerPage = 20;
-
-  const pagesVisited = pageNumber * postsPerPage;
-
-  const [pageCount, setPageCount] = useState(0);
-  
-  // set page count when loading is false
-  useEffect(() => {
-    if (!loading) {
-      setPageCount(Math.ceil(data.data?.posts.length / postsPerPage));
-    }
-  }, [loading, data]);
-
-  const changePage = ({selected}) => {
-    setPageNumber(selected);
-  };  
-
-  const displayPosts = data.data?.posts.slice(pagesVisited, pagesVisited + postsPerPage).map((post, index) => {
-    return (
-      <div
-      className="border rounded my-4 p-3 d-flex"
-      key={index}
-      >
-      <div className="d-flex align-items-center flex-column justify-content-center twitter-img-container">
-        <img
-          src={post.user_profile_img}
-          alt="twitter profile"
-          className="twitter-image"
-        />
-        <p className="fw-bold text-center mt-2">{post.user}</p>
-      </div>
-      <div class="twitter-info-container">
-        <h5 className="my-2">
-          <a
-            className={`text-decoration-none ${!post.tweet_url ? "text-black link-disabled" : ""}`}
-            href={post.tweet_url ? post.tweet_url : "#"}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {post.tweet_text}
-          </a>
-        </h5>
-
-        <p className="text-capitalize my-2">
-          <b>Posted:</b>{" "}
-          <span className="mx-1">
-             <Moment fromNow>
-                { new Date(Date.parse(post.created_at.replace(/( \+)/, ' UTC$1')))}
-            </Moment>
-          </span>
-        </p>
-
-        {(() => {
-          if (post.sentiment_data.score > 0) {
-            return (
-              <p className="text-capitalize my-2">
-                <b>Type:</b>{" "}
-                <span className="text-success mx-1">
-                  Positive
-                </span>
-                😊
-              </p>
-            );
-          } else if (post.sentiment_data.score < 0) {
-            return (
-              <p className="text-capitalize my-2">
-                <b>Type:</b>{" "}
-                <span className="text-danger mx-1">
-                  Negative
-                </span>
-                ☹️
-              </p>
-            );
-          } else {
-            return (
-              <p className="text-capitalize my-2">
-                <b>Type:</b>{" "}
-                <span className="text-muted mx-1">
-                  Neutral
-                </span>
-                😐
-              </p>
-            );
-          }
-        })()}
-
-        <p className="text-capitalize my-2">
-          <b>Score:</b> {post.sentiment_data.score}
-        </p>
-        <p className="my-2">
-          <b>Comparative Score:</b>{" "}
-          {post.sentiment_data.comparative}
-        </p>
-        {post.sentiment_data.words.length > 0 ? (
-          <p className="my-2">
-            <b>Keywords: </b>
-            {post.sentiment_data.words.map((word, index) => (
-              <span
-                className="mx-1 py-2 px-3 rounded bg-light"
-                key={index}
-              >
-                {word}
-              </span>
-            ))}
-          </p>
-        ) : null}
-      </div>
-    </div>
-    );
-  })
-
 
   if (!loading) {
     data.data?.posts.sort((a, b) => new Date(Date.parse(a.created_at.replace(/( \+)/, ' UTC$1'))) < new Date(Date.parse(b.created_at.replace(/( \+)/, ' UTC$1'))) ? 1 : -1);
@@ -233,28 +119,108 @@ function Twitter() {
                   <div className="d-flex justify-content-between">
 
                     <p className="my-3 fst-italic">
-                      Showing {postsPerPage} of {" "}
+                      Showing {" "}
                       <span className="px-2 mx-1 bg-primary text-white rounded">
                         {data.data.posts.length}
                       </span>{" "}
                       results:
                     </p>
-
-                    <p className="d-flex align-items-center justify-content-center fst-italic">Page: {pageNumber + 1}</p>
                   </div>
                   
+                  {data.data?.posts.map((post, index) => {
+                    return (
+                      <div
+                        className="border rounded my-4 p-3 d-flex"
+                        key={index}
+                      >
+                        <div className="d-flex align-items-center flex-column justify-content-center twitter-img-container">
+                          <img
+                            src={post.user_profile_img}
+                            alt="twitter profile"
+                            className="twitter-image"
+                          />
+                          <p className="fw-bold text-center mt-2">{post.user}</p>
+                        </div>
+                        <div class="twitter-info-container">
+                          <h5 className="my-2">
+                            <a
+                              className={`text-decoration-none ${!post.tweet_url ? "text-black link-disabled" : ""}`}
+                              href={post.tweet_url ? post.tweet_url : "#"}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {post.tweet_text}
+                            </a>
+                          </h5>
 
-                  {displayPosts}
-                  <ReactPaginate 
-                  previousLabel="Previous"
-                  nextLabel="Next" 
-                  pageCount={pageCount} 
-                  onPageChange={changePage}
-                  containerClassName="paginate-btns" 
-                  previousLinkClassName="previous-btn"
-                  nextLinkClassName="next-btn"
-                  disabledClassName="paginate-disabled"
-                  activeClassName="paginate-active" />
+                          <p className="text-capitalize my-2">
+                            <b>Posted:</b>{" "}
+                            <span className="mx-1">
+                               <Moment fromNow>
+                                  { new Date(Date.parse(post.created_at.replace(/( \+)/, ' UTC$1')))}
+                              </Moment>
+                            </span>
+                          </p>
+
+                          {(() => {
+                            if (post.sentiment_data.score > 0) {
+                              return (
+                                <p className="text-capitalize my-2">
+                                  <b>Type:</b>{" "}
+                                  <span className="text-success mx-1">
+                                    Positive
+                                  </span>
+                                  😊
+                                </p>
+                              );
+                            } else if (post.sentiment_data.score < 0) {
+                              return (
+                                <p className="text-capitalize my-2">
+                                  <b>Type:</b>{" "}
+                                  <span className="text-danger mx-1">
+                                    Negative
+                                  </span>
+                                  ☹️
+                                </p>
+                              );
+                            } else {
+                              return (
+                                <p className="text-capitalize my-2">
+                                  <b>Type:</b>{" "}
+                                  <span className="text-muted mx-1">
+                                    Neutral
+                                  </span>
+                                  😐
+                                </p>
+                              );
+                            }
+                          })()}
+
+                          <p className="text-capitalize my-2">
+                            <b>Score:</b> {post.sentiment_data.score}
+                          </p>
+                          <p className="my-2">
+                            <b>Comparative Score:</b>{" "}
+                            {post.sentiment_data.comparative}
+                          </p>
+                          {post.sentiment_data.words.length > 0 ? (
+                            <p className="my-2">
+                              <b>Keywords: </b>
+                              {post.sentiment_data.words.map((word, index) => (
+                                <span
+                                  className="mx-1 py-2 px-3 rounded bg-light"
+                                  key={index}
+                                >
+                                  {word}
+                                </span>
+                              ))}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
                 </div>
               )}
             </>
