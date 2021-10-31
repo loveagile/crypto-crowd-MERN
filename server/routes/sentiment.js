@@ -92,7 +92,7 @@ router.get("/twitter/:search", (req, res) => {
           });
         } else {
           // Get tweets from twitter API
-          Twitter.getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=most_recent`, new Array, 100).then(data => {
+          Twitter.getAllTweets(`q=${searchParam}&count=100&include_entities=1&result_type=most_recent`, new Array, 500).then(data => {
             const tweets = sentimentAnalysis(data);
             updatePersistance(searchParam, tweets);
             return res.json(tweets);

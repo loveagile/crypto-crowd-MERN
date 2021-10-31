@@ -66,7 +66,7 @@ module.exports = {
       } else {
         // take the next_results querystring and recursively calls it
         let newQuerysting = data.search_metadata.next_results
-        return this.getAllTweets(newQuerysting, newResults, 100);
+        return this.getAllTweets(newQuerysting, newResults, 500);
       }
     })
   },
