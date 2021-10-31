@@ -28,7 +28,7 @@ export default function GetSentimentData(route, query) {
 }
 
 function getTwitterData(query) {
-  return axios(`http://${window.location.hostname}:3001/sentiment/twitter/${query}`).then(
+  return axios(`/sentiment/twitter/${query}`).then(
     (response) => response
   );
 }
