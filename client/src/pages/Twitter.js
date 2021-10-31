@@ -172,7 +172,11 @@ function Twitter() {
               </p>
 
               <div className="h-75 d-flex justify-content-center align-items-center">
-                <h3 className="text-muted">{data.data?.averages.average_score.toFixed(3)}</h3>
+              {loading === true ? (
+                  <ScaleLoader color="#0d6efd" />
+                ) : (
+                  <h3 className="text-muted">{data.data?.averages.average_score.toFixed(3)}</h3>
+                )}
               </div>
             </div>
             <div className="col-3 border py-3 text-center rounded data-summary">
