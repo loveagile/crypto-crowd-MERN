@@ -52,7 +52,10 @@ router.get("/twitter/:search", (req, res) => {
       Twitter.getAllSinceTweets(`q=${searchParam}&since_id=${mostRecentTweet.tweet_id}&count=100&result_type=most_recent`, new Array).then(result => {
         if (result.length > 0) {
           // Re-run sentiment analysis on datastore with newly retrieved data
-          const newResults = sentimentReAnalyse(result, tweets);
+          result.forEach((tweet) => {
+            tweets.posts.push(tweet)
+          })
+          const newResults = sentimentAnalysis(tweets.posts)
           // Update Redis cache
           redisClient.setex(searchParam, 3600, JSON.stringify(newResults));
           return res.json(newResults);
@@ -79,7 +82,12 @@ router.get("/twitter/:search", (req, res) => {
           Twitter.getAllSinceTweets(`q=${searchParam}&since_id=${mostRecentTweet.tweet_id}&count=100&result_type=most_recent&include_entities=1`, new Array).then(result => {
             if (result.length > 0) {
               // Re-run sentiment analysis on datastore with newly retrieved data
-              const newResults = sentimentReAnalyse(result, tweets);
+              
+              result.forEach((tweet) => {
+                tweets.posts.push(tweet)
+              })
+              const newResults = sentimentAnalysis(tweets.posts)
+
               updatePersistance(searchParam, newResults);
               return res.json(newResults);
             } else {
